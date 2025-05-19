@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Live Viewport Word Counter + Smart Link Inspector",
+  "version": "2.0",
+  "description": "Counts words in viewport, shows categorized useful links in a draggable UI.",
+  "permissions": [],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["style.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "48": "icon48.png"
+  }
+}
