@@ -88,7 +88,12 @@ export function isValidURL(url) {
  */
 export async function checkURLStatus(url) {
   try {
-    const response = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
+    const response = await fetch(url, { 
+      method: 'HEAD', 
+      mode: 'no-cors',
+      cache: 'no-cache',
+      credentials: 'omit'
+    });
     return {
       status: response.status,
       ok: response.ok,
@@ -99,6 +104,55 @@ export async function checkURLStatus(url) {
     return {
       status: 0,
       ok: false,
+      error: err.message
+    };
+  }
+}
+
+/**
+ * Analyze URL and get detailed information
+ * This function was missing and causing the "could not initialize module" error
+ */
+export async function analyzeUrl(url) {
+  try {
+    // Basic URL parsing
+    const parsed = parseURL(url);
+    if (!parsed) {
+      return {
+        status: 'invalid',
+        url: url
+      };
+    }
+    
+    // Get domain info
+    const domainInfo = getDomainInfo(url);
+    
+    // Try to check status (might fail due to CORS)
+    let statusInfo = null;
+    try {
+      statusInfo = await checkURLStatus(url);
+    } catch (e) {
+      statusInfo = { status: 'unknown', ok: false, error: e.message };
+    }
+    
+    // Combine all information
+    return {
+      url: url,
+      status: statusInfo.ok ? 'active' : (statusInfo.status === 0 ? 'unknown' : 'error'),
+      statusCode: statusInfo.status,
+      domain: parsed.hostname,
+      rootDomain: domainInfo?.rootDomain || parsed.hostname,
+      path: parsed.pathname,
+      protocol: parsed.protocol,
+      isRedirecting: statusInfo.redirected,
+      finalUrl: statusInfo.redirectURL || url,
+      queryParams: parsed.queryParams
+    };
+  } catch (err) {
+    console.error('Error analyzing URL:', err);
+    return {
+      url: url,
+      status: 'error',
       error: err.message
     };
   }

@@ -1,5 +1,6 @@
 import { updateWordCount } from './word-count.js';
 import { showLinkBox } from './ui.js';
+import { addTableSection, loadTablesContent } from './tables.js';
 
 /**
  * Initialize the extension
@@ -61,5 +62,24 @@ export function initExtension() {
     }, 1000); // Delay extension start by 1 second
   } catch (err) {
     console.error('Error initializing extension:', err);
+  }
+}
+
+/**
+ * Initialize the tabs
+ */
+export function initTabs() {
+  const tabContainer = document.querySelector('.tabs-container');
+  if (tabContainer) {
+    // Add existing tabs
+    // ...existing code...
+    
+    // Add the Tables tab
+    const tablesContent = addTableSection(tabContainer);
+    
+    // Initialize tables content
+    if (tablesContent) {
+      loadTablesContent(tablesContent);
+    }
   }
 }

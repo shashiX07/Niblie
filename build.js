@@ -16,6 +16,7 @@ const config = {
     'links.js',
     'images.js',
     'videos.js',
+    'tables.js', 
     'ui.js',
     'utils.js',
     'url.js'
