@@ -114,6 +114,94 @@ const ImprovedWordCounter = {
       charCount,
       avgWordLength
     };
+  },
+  
+  /**
+   * Count words in the current viewport
+   * @returns {number} Number of words visible in viewport
+   */
+  countWords: function() {
+    try {
+      // Get all text nodes in the viewport
+      const textNodes = this._getVisibleTextNodes();
+      
+      // Extract text content from visible nodes
+      let text = '';
+      for (const node of textNodes) {
+        text += ' ' + node.textContent;
+      }
+      
+      // Count words using regex
+      const wordCount = (text.trim().match(/\S+/g) || []).length;
+      console.log(`WordCounter: Found ${wordCount} words in viewport`);
+      
+      return wordCount;
+    } catch (error) {
+      console.error('WordCounter: Error counting words', error);
+      return 0;
+    }
+  },
+  
+  /**
+   * Get all text nodes that are currently visible in the viewport
+   * @returns {Array} Array of visible text nodes
+   * @private
+   */
+  _getVisibleTextNodes: function() {
+    // Implementation will vary based on your needs
+    // Here's a simple one that gets text nodes from visible elements
+    const visibleElements = Array.from(document.querySelectorAll('*')).filter(el => {
+      const rect = el.getBoundingClientRect();
+      const style = window.getComputedStyle(el);
+      
+      // Check if element is visible and within viewport
+      return rect.width > 0 && 
+             rect.height > 0 && 
+             rect.top < window.innerHeight &&
+             rect.bottom > 0 &&
+             rect.left < window.innerWidth &&
+             rect.right > 0 &&
+             style.display !== 'none' &&
+             style.visibility !== 'hidden' &&
+             parseFloat(style.opacity) > 0;
+    });
+    
+    // Extract text nodes
+    const textNodes = [];
+    for (const el of visibleElements) {
+      this._extractTextNodes(el, textNodes);
+    }
+    
+    return textNodes;
+  },
+  
+  /**
+   * Recursively extract text nodes from an element
+   * @param {HTMLElement} element - Element to extract text nodes from
+   * @param {Array} result - Array to store text nodes
+   * @private
+   */
+  _extractTextNodes: function(element, result) {
+    if (!element) return;
+    
+    // Check if it's a text node
+    if (element.nodeType === Node.TEXT_NODE && element.textContent.trim().length > 0) {
+      result.push(element);
+      return;
+    }
+    
+    // Skip invisible elements
+    if (element.nodeType === Node.ELEMENT_NODE) {
+      const style = window.getComputedStyle(element);
+      if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) {
+        return;
+      }
+    }
+    
+    // Recursively process child nodes
+    for (const child of element.childNodes) {
+      this._extractTextNodes(child, result);
+    }
   }
 };
 

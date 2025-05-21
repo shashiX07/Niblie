@@ -3,8 +3,11 @@
  */
 
 // Listen for installation
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(details => {
   console.log('Viewport Word Counter extension installed');
+  
+  if (details.reason === "install") {
+    // Open options page on first install
+    chrome.runtime.openOptionsPage();
+  }
 });
-
-// Nothing else required for background script as content script handles the main functionality

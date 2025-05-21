@@ -3,16 +3,17 @@
   "name": "Viewport Word Counter",
   "version": "1.0",
   "description": "Counts words in the current viewport and displays in a draggable badge",
-  "permissions": ["activeTab"],
+  "permissions": ["activeTab", "storage"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["modules/wordCounter.js", "modules/ui.js", "modules/linkFinder.js", "modules/modal.js", "content.js"]
+      "js": ["modules/wordCounter.js", "modules/ui.js", "modules/linkFinder.js", "modules/settings.js", "modules/modal.js", "content.js"]
     }
   ],
   "background": {
     "service_worker": "background.js"
   },
+  "options_page": "options.html",
   "icons": {
     "48": "icon48.png"
   }

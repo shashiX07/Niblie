@@ -8,19 +8,36 @@
   
   // Check that required modules are loaded
   if (typeof WordCounter === 'undefined') {
-    console.error('Error: WordCounter module not loaded');
+    console.error('WordCounter module not found');
+    return;
   }
   
   if (typeof BadgeUI === 'undefined') {
-    console.error('Error: BadgeUI module not loaded');
-  }
-  if (typeof LinkFinder === 'undefined') {
-    console.error('Error: LinkFinder module not loaded');
-  }
-  if (typeof ModalUI === 'undefined') {
-    console.error('Error: ModalUI module not loaded');
+    console.error('BadgeUI module not found');
+    return;
   }
   
-  // You could add version checking or other simple module setup here
-  console.log('Modules initialized successfully');
+  if (typeof LinkFinder === 'undefined') {
+    console.error('LinkFinder module not found');
+    return;
+  }
+  
+  if (typeof SettingsUI === 'undefined') {
+    console.error('SettingsUI module not found');
+    return;
+  }
+  
+  if (typeof ModalUI === 'undefined') {
+    console.error('ModalUI module not found');
+    return;
+  }
+  
+  // Initialize BadgeUI with settings
+  BadgeUI.init().then(() => {
+    // Initial word count
+    const count = WordCounter.countWords();
+    BadgeUI.updateBadge(count);
+    
+    console.log('Viewport Word Counter: Initialization complete');
+  });
 })();
