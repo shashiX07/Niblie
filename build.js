@@ -27,6 +27,11 @@
     return;
   }
   
+  if (typeof VideoFinder === 'undefined') {
+    console.error('VideoFinder module not found');
+    return;
+  }
+  
   if (typeof ModalUI === 'undefined') {
     console.error('ModalUI module not found');
     return;

@@ -7,7 +7,15 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["modules/wordCounter.js", "modules/ui.js", "modules/linkFinder.js", "modules/imageFinder.js", "modules/modal.js", "content.js"]
+      "js": [
+        "modules/wordCounter.js", 
+        "modules/ui.js", 
+        "modules/linkFinder.js", 
+        "modules/imageFinder.js",
+        "modules/videoFinder.js",
+        "modules/modal.js", 
+        "content.js"
+      ]
     }
   ],
   "background": {

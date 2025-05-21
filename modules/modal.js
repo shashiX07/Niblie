@@ -148,8 +148,50 @@ const ModalUI = {
       this.loadImagesSection();
     });
     
+    const videosItem = document.createElement('a');
+    videosItem.className = 'niblie-nav-item';
+    videosItem.textContent = 'Videos';
+    videosItem.href = '#';
+    videosItem.dataset.section = 'videos';
+    videosItem.style.cssText = `
+      display: block;
+      padding: 12px 20px;
+      color: #5f6368;
+      text-decoration: none;
+      font-weight: 400;
+      margin-bottom: 5px;
+      border-left: 4px solid transparent;
+      transition: all 0.2s;
+    `;
+
+    videosItem.addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      // Update active tab
+      navItems.querySelectorAll('.niblie-nav-item').forEach(item => {
+        item.className = 'niblie-nav-item';
+        item.style.color = '#5f6368';
+        item.style.fontWeight = '400';
+        item.style.backgroundColor = '';
+        item.style.borderLeftColor = 'transparent';
+      });
+      
+      videosItem.className = 'niblie-nav-item niblie-nav-active';
+      videosItem.style.color = '#1a73e8';
+      videosItem.style.fontWeight = '500';
+      videosItem.style.backgroundColor = 'rgba(26, 115, 232, 0.1)';
+      videosItem.style.borderLeftColor = '#1a73e8';
+      
+      // Update current section
+      this.currentSection = 'videos';
+      
+      // Load videos section
+      this.loadVideosSection();
+    });
+    
     navItems.appendChild(linksItem);
     navItems.appendChild(imagesItem);
+    navItems.appendChild(videosItem);
     sidebar.appendChild(navItems);
     
     // Create main content area
@@ -718,6 +760,130 @@ const ModalUI = {
         color: #d93025;
       `;
       mainContent.appendChild(errorMsg);
+    }
+  },
+  
+  /**
+   * Loads and displays the videos section content
+   * @param {boolean} forceRefresh - Whether to force refreshing video data
+   */
+  loadVideosSection: function(forceRefresh = false) {
+    // Update navigation state
+    this._updateSidebarNavigation('videos');
+    
+    // Get main content area
+    const mainContent = document.querySelector('.niblie-main-content');
+    if (!mainContent) return;
+    
+    // Clear existing content
+    mainContent.innerHTML = '';
+    
+    // Create header with actions
+    const contentHeader = document.createElement('div');
+    contentHeader.className = 'niblie-content-header';
+    contentHeader.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #e4e8ed;
+    `;
+    
+    const sectionTitle = document.createElement('h2');
+    sectionTitle.textContent = 'Videos on This Page';
+    sectionTitle.style.cssText = `
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+    `;
+    
+    const actionButtons = document.createElement('div');
+    actionButtons.className = 'niblie-actions';
+    
+    // Create buttons
+    const refreshButton = document.createElement('button');
+    refreshButton.className = 'niblie-button niblie-refresh-button';
+    refreshButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+      </svg>
+    `;
+    refreshButton.style.cssText = `
+      background: none;
+      border: none;
+      color: #5f6368;
+      cursor: pointer;
+      padding: 8px;
+      margin-right: 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    `;
+    refreshButton.title = "Refresh videos";
+    
+    const closeButton = document.createElement('button');
+    closeButton.className = 'niblie-button niblie-close-button';
+    closeButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+      </svg>
+    `;
+    closeButton.style.cssText = `
+      background: none;
+      border: none;
+      color: #5f6368;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    `;
+    
+    // Button events
+    closeButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.closeModal();
+    });
+    
+    refreshButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.loadVideosSection(true);
+    });
+    
+    // Add hover effects
+    [closeButton, refreshButton].forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        btn.style.backgroundColor = '#f1f3f4';
+        btn.style.color = '#202124';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.backgroundColor = '';
+        btn.style.color = '#5f6368';
+      });
+    });
+    
+    actionButtons.appendChild(refreshButton);
+    actionButtons.appendChild(closeButton);
+    contentHeader.appendChild(sectionTitle);
+    contentHeader.appendChild(actionButtons);
+    
+    // Add header to main content
+    mainContent.appendChild(contentHeader);
+    
+    // Create and add videos content
+    if (window.VideoUI && typeof window.VideoUI.createVideosContent === 'function') {
+      const videosContent = VideoUI.createVideosContent(forceRefresh);
+      mainContent.appendChild(videosContent);
+    } else {
+      const errorMsg = document.createElement('div');
+      errorMsg.textContent = 'Video finder module is not available.';
+      errorMsg.style.cssText = `
+        padding: 40px;
+        text-align: center;
+        color: #d93025;
+      `;
+      mainContent.appendChild(errorMsg);
+      console.error('VideoUI module not found or createVideosContent method is missing');
     }
   },
   
