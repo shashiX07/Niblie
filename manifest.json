@@ -1,27 +1,19 @@
 {
   "manifest_version": 3,
-  "name": "Page Analyzer",
+  "name": "Viewport Word Counter",
   "version": "1.0",
-  "description": "Analyzes web pages to show links, images, videos and word count",
+  "description": "Counts words in the current viewport and displays in a draggable badge",
   "permissions": ["activeTab"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "css": ["styles/styles.css"],
-      "run_at": "document_end"
+      "js": ["modules/wordCounter.js", "modules/ui.js", "modules/linkFinder.js", "modules/modal.js", "content.js"]
     }
   ],
-  "icons": {
-    "48": "icons/icon48.png"
-  },
   "background": {
     "service_worker": "background.js"
   },
-  "web_accessible_resources": [
-    {
-      "resources": ["modules/*", "styles/*"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  "icons": {
+    "48": "icon48.png"
+  }
 }

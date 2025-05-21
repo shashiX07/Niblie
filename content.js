@@ -1,92 +1,72 @@
 /**
- * Main entry point for the extension
- * Uses dynamic imports for better performance and code splitting
+ * Content script that runs on web pages
+ * Counts words in the viewport and displays them in a draggable badge
  */
 
-// Add the stylesheet first for immediate styling
-const style = document.createElement('style');
-style.textContent = `
-  #live-word-count-box {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #0073e6;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    z-index: 9999;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    user-select: none;
-    transition: background-color 0.2s;
-  }
-  #live-word-count-box:hover {
-    background: #0066cc;
-  }
-`;
-document.head.appendChild(style);
+// Update word count when scrolling or on DOM mutations
+const updateWordCount = () => {
+  // Use the improved word counter
+  const count = ImprovedWordCounter.getViewportWordCount();
+  BadgeUI.updateBadge(count);
+};
 
-// Initialize when the DOM is fully loaded
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initExtension);
-} else {
-  initExtension();
-}
-
-/**
- * Initialize the extension
- * Uses dynamic imports to load modules only when needed
- */
-function initExtension() {
-  try {
-    // Delay initialization to avoid interfering with page load
-    setTimeout(() => {
-      import('./modules/core.js')
-        .then(module => {
-          module.initExtension();
-        })
-        .catch(error => {
-          console.error('Failed to initialize extension:', error);
-          
-          // Fallback to minimal functionality if module loading fails
-          createMinimalWordCounter();
-        });
-    }, 1000);
-  } catch (err) {
-    console.error('Error initializing extension:', err);
-    createMinimalWordCounter();
-  }
-}
-
-/**
- * Minimal word counter as fallback if module loading fails
- */
-function createMinimalWordCounter() {
-  // Create floating box
-  const box = document.createElement("div");
-  box.id = "live-word-count-box";
-  box.innerText = "👀 Words in View: ...";
-  document.body.appendChild(box);
+// Initialize the word counter
+const initWordCounter = () => {
+  console.log('Viewport Word Counter: Initializing content script');
   
-  // Simple word counting
-  function countWords() {
-    try {
-      const text = document.body.innerText || '';
-      const count = text.trim().split(/\s+/).filter(Boolean).length;
-      box.innerText = `👀 Words in View: ${count}`;
-    } catch (err) {
-      box.innerText = `👀 Words: Error`;
+  // Create badge immediately
+  setTimeout(() => {
+    updateWordCount();
+    console.log('Initial word count updated');
+  }, 500); // Small delay to ensure DOM is fully processed
+  
+  // Update on scroll with improved debouncing
+  window.addEventListener('scroll', debounce(updateWordCount, 300));
+  
+  // Update on resize
+  window.addEventListener('resize', debounce(updateWordCount, 300));
+  
+  // Update on DOM changes with more specific targeting
+  const observer = new MutationObserver(mutations => {
+    // Only update if text content changed
+    const hasTextChange = mutations.some(mutation => 
+      mutation.type === 'characterData' || 
+      mutation.type === 'childList'
+    );
+    
+    if (hasTextChange) {
+      debounce(updateWordCount, 300)();
     }
-  }
-  
-  // Add click handler to show alert
-  box.addEventListener('click', () => {
-    alert('Extension is running in minimal mode due to an error loading modules.');
   });
   
-  // Set up basic observers
-  window.addEventListener('scroll', countWords);
-  window.addEventListener('resize', countWords);
-  setTimeout(countWords, 500);
+  observer.observe(document.body, { 
+    childList: true, 
+    subtree: true,
+    characterData: true 
+  });
+  
+  console.log('Viewport Word Counter: Observers initialized');
+};
+
+// Improved debounce function with immediate option
+function debounce(func, delay, immediate = false) {
+  let timeout;
+  return function(...args) {
+    const callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    
+    timeout = setTimeout(() => {
+      timeout = null;
+      if (!immediate) func.apply(this, args);
+    }, delay);
+    
+    if (callNow) func.apply(this, args);
+  };
+}
+
+// Run when DOM is fully loaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initWordCounter);
+} else {
+  initWordCounter();
 }

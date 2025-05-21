@@ -1,85 +1,55 @@
-import { updateWordCount } from './word-count.js';
-import { showLinkBox } from './ui.js';
-import { addTableSection, loadTablesContent } from './tables.js';
 
 /**
- * Initialize the extension
+ * Core functionality for word counting
  */
-export function initExtension() {
-  try {
-    // Delay initialization to avoid interfering with page load
-    setTimeout(() => {
-      // Floating draggable box
-      const box = document.createElement("div");
-      box.id = "live-word-count-box";
-      box.innerText = "👀 Words in View: ...";
-      document.body.appendChild(box);
-      
-      // Track if we're dragging vs clicking
-      let isDragging = false, offsetX = 0, offsetY = 0;
-      let hasMovedDuringDrag = false;
-      
-      box.addEventListener("mousedown", function (e) {
-        isDragging = true;
-        hasMovedDuringDrag = false;
-        offsetX = e.clientX - box.getBoundingClientRect().left;
-        offsetY = e.clientY - box.getBoundingClientRect().top;
-        box.style.transition = "none";
-        e.preventDefault(); // Prevent text selection
-      });
-      
-      document.addEventListener("mousemove", function (e) {
-        if (isDragging) {
-          hasMovedDuringDrag = true;
-          box.style.left = (e.clientX - offsetX) + "px";
-          box.style.top = (e.clientY - offsetY) + "px";
-          box.style.right = "auto"; 
-          box.style.bottom = "auto";
-        }
-      });
-      
-      document.addEventListener("mouseup", function() {
-        if (isDragging && !hasMovedDuringDrag) {
-          showLinkBox(); // This calls our fixed showLinkBox function
-        }
-        isDragging = false;
-      });
-      
-      // Set up observers
-      window.addEventListener("scroll", updateWordCount);
-      window.addEventListener("resize", updateWordCount);
-      
-      // Watch for dynamic content changes
-      const observer = new MutationObserver(updateWordCount);
-      observer.observe(document.body, { 
-        childList: true, 
-        subtree: true,
-        characterData: true
-      });
-      
-      // Initial word count
-      setTimeout(updateWordCount, 500);
-    }, 1000); // Delay extension start by 1 second
-  } catch (err) {
-    console.error('Error initializing extension:', err);
-  }
-}
 
-/**
- * Initialize the tabs
- */
-export function initTabs() {
-  const tabContainer = document.querySelector('.tabs-container');
-  if (tabContainer) {
-    // Add existing tabs
-    // ...existing code...
+const WordCounter = {
+  /**
+   * Gets visible text from the current viewport
+   * @returns {string} Text content visible in viewport
+   */
+  getVisibleText: function() {
+    const viewportHeight = window.innerHeight;
+    const elements = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, span, div, li, td, th, a');
+    let visibleText = '';
     
-    // Add the Tables tab
-    const tablesContent = addTableSection(tabContainer);
+    // Filter for elements currently visible in the viewport
+    elements.forEach(element => {
+      const rect = element.getBoundingClientRect();
+      // Check if element is in viewport
+      if (rect.top >= 0 && rect.bottom <= viewportHeight) {
+        visibleText += ' ' + element.textContent;
+      }
+      // Element partially in viewport
+      else if ((rect.top < viewportHeight && rect.bottom > 0)) {
+        visibleText += ' ' + element.textContent;
+      }
+    });
     
-    // Initialize tables content
-    if (tablesContent) {
-      loadTablesContent(tablesContent);
-    }
+    return visibleText;
+  },
+  
+  /**
+   * Counts words in a given text
+   * @param {string} text - Text to count words in
+   * @returns {number} Word count
+   */
+  countWords: function(text) {
+    if (!text) return 0;
+    
+    // Remove special characters and extra spaces
+    const cleanText = text.trim().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ');
+    const words = cleanText.split(' ').filter(word => word.length > 0);
+    
+    return words.length;
+  },
+  
+  /**
+   * Gets current word count in viewport
+   * @returns {number} Word count
+   */
+  getViewportWordCount: function() {
+    const visibleText = this.getVisibleText();
+    return this.countWords(visibleText);
   }
-}
+};
