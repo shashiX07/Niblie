@@ -22,8 +22,8 @@
     return;
   }
   
-  if (typeof SettingsUI === 'undefined') {
-    console.error('SettingsUI module not found');
+  if (typeof ImageFinder === 'undefined') {
+    console.error('ImageFinder module not found');
     return;
   }
   

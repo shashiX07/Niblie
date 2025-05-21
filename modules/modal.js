@@ -107,7 +107,49 @@ const ModalUI = {
       transition: all 0.2s;
     `;
     
+    const imagesItem = document.createElement('a');
+    imagesItem.className = 'niblie-nav-item';
+    imagesItem.textContent = 'Images';
+    imagesItem.href = '#';
+    imagesItem.dataset.section = 'images';
+    imagesItem.style.cssText = `
+      display: block;
+      padding: 12px 20px;
+      color: #5f6368;
+      text-decoration: none;
+      font-weight: 400;
+      margin-bottom: 5px;
+      border-left: 4px solid transparent;
+      transition: all 0.2s;
+    `;
+
+    imagesItem.addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      // Update active tab
+      navItems.querySelectorAll('.niblie-nav-item').forEach(item => {
+        item.className = 'niblie-nav-item';
+        item.style.color = '#5f6368';
+        item.style.fontWeight = '400';
+        item.style.backgroundColor = '';
+        item.style.borderLeftColor = 'transparent';
+      });
+      
+      imagesItem.className = 'niblie-nav-item niblie-nav-active';
+      imagesItem.style.color = '#1a73e8';
+      imagesItem.style.fontWeight = '500';
+      imagesItem.style.backgroundColor = 'rgba(26, 115, 232, 0.1)';
+      imagesItem.style.borderLeftColor = '#1a73e8';
+      
+      // Update current section
+      this.currentSection = 'images';
+      
+      // Load images section
+      this.loadImagesSection();
+    });
+    
     navItems.appendChild(linksItem);
+    navItems.appendChild(imagesItem);
     sidebar.appendChild(navItems);
     
     // Create main content area
@@ -168,7 +210,7 @@ const ModalUI = {
     settingsButton.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
         <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
-        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a.873.873 0 0 0 2.692-1.115l.094-.319z"/>
+        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a.873.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a.873.873 0 0 0 2.692-1.115l.094-.319z"/>
       </svg>
     `;
     settingsButton.style.cssText = `
@@ -449,6 +491,9 @@ const ModalUI = {
    * @param {boolean} forceRefresh - Whether to force refreshing link data
    */
   loadLinksSection: function(forceRefresh = false) {
+    // IMPORTANT: Fix sidebar navigation first - ensure all nav items work 
+    this._updateSidebarNavigation('links');
+    
     const linksContent = document.getElementById('niblie-links-content');
     
     // Clear existing content except loading indicator
@@ -524,6 +569,183 @@ const ModalUI = {
       `;
       linksContent.appendChild(errorMsg);
     });
+  },
+  
+  /**
+   * Loads and displays the images section content
+   * @param {boolean} forceRefresh - Whether to force refreshing image data
+   */
+  loadImagesSection: function(forceRefresh = false) {
+    // IMPORTANT: Fix sidebar navigation first - ensure all nav items work
+    this._updateSidebarNavigation('images');
+    
+    // Get main content area
+    const mainContent = document.querySelector('.niblie-main-content');
+    if (!mainContent) return;
+    
+    // Clear existing content
+    mainContent.innerHTML = '';
+    
+    // Create header with actions
+    const contentHeader = document.createElement('div');
+    contentHeader.className = 'niblie-content-header';
+    contentHeader.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #e4e8ed;
+    `;
+    
+    const sectionTitle = document.createElement('h2');
+    sectionTitle.textContent = 'Images on This Page';
+    sectionTitle.style.cssText = `
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+    `;
+    
+    const actionButtons = document.createElement('div');
+    actionButtons.className = 'niblie-actions';
+    
+    // Create buttons
+    const refreshButton = document.createElement('button');
+    refreshButton.className = 'niblie-button niblie-refresh-button';
+    refreshButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+      </svg>
+    `;
+    refreshButton.style.cssText = `
+      background: none;
+      border: none;
+      color: #5f6368;
+      cursor: pointer;
+      padding: 8px;
+      margin-right: 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    `;
+    refreshButton.title = "Refresh images";
+    
+    const settingsButton = document.createElement('button');
+    settingsButton.className = 'niblie-button niblie-settings-button';
+    settingsButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a.873.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a.873.873 0 0 0 2.692-1.115l.094-.319z"/>
+      </svg>
+    `;
+    settingsButton.style.cssText = `
+      background: none;
+      border: none;
+      color: #5f6368;
+      cursor: pointer;
+      padding: 8px;
+      margin-right: 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    `;
+    
+    const closeButton = document.createElement('button');
+    closeButton.className = 'niblie-button niblie-close-button';
+    closeButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+      </svg>
+    `;
+    closeButton.style.cssText = `
+      background: none;
+      border: none;
+      color: #5f6368;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    `;
+    
+    // Button events
+    closeButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.closeModal();
+    });
+    
+    refreshButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.loadImagesSection(true);
+    });
+    
+    settingsButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (typeof this._showSettingsView === 'function') {
+        this._showSettingsView();
+      }
+    });
+    
+    // Add hover effects
+    [closeButton, settingsButton, refreshButton].forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        btn.style.backgroundColor = '#f1f3f4';
+        btn.style.color = '#202124';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.backgroundColor = '';
+        btn.style.color = '#5f6368';
+      });
+    });
+    
+    actionButtons.appendChild(refreshButton);
+    actionButtons.appendChild(settingsButton);
+    actionButtons.appendChild(closeButton);
+    contentHeader.appendChild(sectionTitle);
+    contentHeader.appendChild(actionButtons);
+    
+    // Add header to main content
+    mainContent.appendChild(contentHeader);
+    
+    // Create and add images content
+    if (window.ImageUI) {
+      const imagesContent = ImageUI.createImagesContent(forceRefresh);
+      mainContent.appendChild(imagesContent);
+    } else {
+      const errorMsg = document.createElement('div');
+      errorMsg.textContent = 'Image finder module is not available.';
+      errorMsg.style.cssText = `
+        padding: 40px;
+        text-align: center;
+        color: #d93025;
+      `;
+      mainContent.appendChild(errorMsg);
+    }
+  },
+  
+  /**
+   * Opens the settings view
+   * @private
+   */
+  _showSettingsView: function() {
+    // For now, just log to console
+    console.log('Settings view is not implemented yet.');
+  },
+  
+  /**
+   * Gets the current section (links or images)
+   * @returns {string} - Current section ID
+   * @private
+   */
+  _getCurrentSection: function() {
+    return this.currentSection;
+  },
+  
+  /**
+   * Sets the current section (links or images)
+   * @param {string} section - Section ID to set as current
+   * @private
+   */
+  _setCurrentSection: function(section) {
+    this.currentSection = section;
   },
   
   /**
@@ -912,5 +1134,39 @@ const ModalUI = {
            name.slice(1).replace(/([A-Z])/g, ' $1');
     
     return name;
-  }
+  },
+  
+  /**
+   * Helper function to update sidebar navigation state
+   * @param {string} activeSection - The currently active section
+   * @private
+   */
+  _updateSidebarNavigation: function(activeSection) {
+    // Find all navigation items
+    const navItems = document.querySelectorAll('.niblie-nav-item');
+    
+    // Update active state for each item
+    navItems.forEach(item => {
+      const section = item.dataset.section;
+      
+      // Reset styles
+      item.className = 'niblie-nav-item';
+      item.style.color = '#5f6368';
+      item.style.fontWeight = '400';
+      item.style.backgroundColor = '';
+      item.style.borderLeftColor = 'transparent';
+      
+      // Set active styles
+      if (section === activeSection) {
+        item.className = 'niblie-nav-item niblie-nav-active';
+        item.style.color = '#1a73e8';
+        item.style.fontWeight = '500';
+        item.style.backgroundColor = 'rgba(26, 115, 232, 0.1)';
+        item.style.borderLeftColor = '#1a73e8';
+      }
+    });
+    
+    // Update current section
+    this.currentSection = activeSection;
+  },
 };
