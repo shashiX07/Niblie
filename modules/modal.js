@@ -5,6 +5,7 @@
 const ModalUI = {
   modal: null,
   isOpen: false,
+  inTransition: false,
   currentSection: 'links',
   
   /**
@@ -167,7 +168,7 @@ const ModalUI = {
     settingsButton.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
         <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
-        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
+        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a.873.873 0 0 0 2.692-1.115l.094-.319z"/>
       </svg>
     `;
     settingsButton.style.cssText = `
@@ -201,6 +202,7 @@ const ModalUI = {
     // Events for buttons
     closeButton.addEventListener('click', (e) => {
       e.preventDefault();
+      e.stopPropagation();
       this.closeModal();
     });
     
@@ -281,7 +283,78 @@ const ModalUI = {
     
     linksContent.appendChild(loadingSpinner);
     
+    // After creating contentHeader but before creating linksContent
+    // Add category tabs navigation
+    const categoryTabs = document.createElement('div');
+    categoryTabs.className = 'niblie-category-tabs';
+    categoryTabs.style.cssText = `
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      margin-bottom: 20px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e4e8ed;
+      padding: 4px;
+    `;
+    
+    // Define categories with nice labels - make sure these match the actual category names
+    const categories = [
+      { id: 'all', label: 'All Links' },
+      { id: 'socialLinks', label: 'Social' },
+      { id: 'externalLinks', label: 'External' },
+      { id: 'internalLinks', label: 'Internal' },
+      { id: 'documentLinks', label: 'Documents' },
+      { id: 'mediaLinks', label: 'Media' },
+      { id: 'emailLinks', label: 'Email' },
+      { id: 'navigationLinks', label: 'Navigation' }
+    ];
+    
+    // Create tab for each category
+    categories.forEach(cat => {
+      const tab = document.createElement('button');
+      tab.className = `niblie-tab ${cat.id === 'all' ? 'active' : ''}`;
+      tab.dataset.category = cat.id;
+      tab.textContent = cat.label;
+      tab.style.cssText = `
+        padding: 10px 16px;
+        border: none;
+        background-color: ${cat.id === 'all' ? '#e8f0fe' : 'transparent'};
+        color: ${cat.id === 'all' ? '#1a73e8' : '#5f6368'};
+        font-weight: ${cat.id === 'all' ? '500' : 'normal'};
+        border-radius: 6px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s;
+        margin: 0 2px;
+        font-size: 14px;
+      `;
+      
+      // Handle tab selection
+      tab.addEventListener('click', () => {
+        // Update active tab styles
+        document.querySelectorAll('.niblie-tab').forEach(t => {
+          t.style.backgroundColor = 'transparent';
+          t.style.color = '#5f6368';
+          t.style.fontWeight = 'normal';
+          t.classList.remove('active');
+        });
+        
+        tab.style.backgroundColor = '#e8f0fe';
+        tab.style.color = '#1a73e8';
+        tab.style.fontWeight = '500';
+        tab.classList.add('active');
+        
+        // Filter links by category
+        this._showCategoryLinks(cat.id);
+      });
+      
+      categoryTabs.appendChild(tab);
+    });
+    
+    // Add tabs after header
     mainContent.appendChild(contentHeader);
+    mainContent.appendChild(categoryTabs);
     mainContent.appendChild(linksContent);
     
     // Assemble the modal
@@ -292,6 +365,7 @@ const ModalUI = {
     // Add event listeners for easy cleanup
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
+        e.stopPropagation();
         this.closeModal();
       }
     });
@@ -307,6 +381,10 @@ const ModalUI = {
    * Opens the modal and initializes the current section
    */
   openModal: function() {
+    // Prevent opening if already open or in transition
+    if (this.isOpen || this.inTransition) return;
+    
+    this.inTransition = true;
     const modal = this.createModal();
     
     // Prevent background scrolling
@@ -324,17 +402,23 @@ const ModalUI = {
       if (this.currentSection === 'links') {
         this.loadLinksSection();
       }
+      
+      // Set open state after animation completes
+      setTimeout(() => {
+        this.isOpen = true;
+        this.inTransition = false;
+      }, 300);
     }, 10);
-    
-    this.isOpen = true;
   },
   
   /**
    * Closes the modal with animation
    */
   closeModal: function() {
-    if (!this.modal) return;
+    // Prevent closing if not open or in transition
+    if (!this.isOpen || this.inTransition || !this.modal) return;
     
+    this.inTransition = true;
     const modal = this.modal;
     const modalContent = modal.querySelector('.niblie-modal-content');
     
@@ -353,9 +437,11 @@ const ModalUI = {
       if (window.LinkFinder) {
         LinkFinder.clearCache();
       }
+      
+      // Reset state
+      this.isOpen = false;
+      this.inTransition = false;
     }, 300);
-    
-    this.isOpen = false;
   },
   
   /**
@@ -381,8 +467,13 @@ const ModalUI = {
       // Create link category sections
       let hasLinks = false;
       
+      // Track which categories have links for later use in tab filtering
+      const categoriesWithLinks = {};
+      
       Object.keys(linkData).forEach(category => {
         const links = linkData[category];
+        categoriesWithLinks[category] = links.length > 0;
+        
         if (links.length === 0) return;
         
         hasLinks = true;
@@ -390,6 +481,9 @@ const ModalUI = {
         // Create category section
         this.createLinkCategory(linksContent, category, links);
       });
+      
+      // Store categories with links for tab filtering
+      this.categoriesWithLinks = categoriesWithLinks;
       
       // If no links were found
       if (!hasLinks) {
@@ -403,6 +497,17 @@ const ModalUI = {
           font-style: italic;
         `;
         linksContent.appendChild(noLinks);
+      } else {
+        // Apply current tab filter
+        const activeTab = document.querySelector('.niblie-tab.active');
+        if (activeTab) {
+          const selectedCategory = activeTab.dataset.category;
+          console.log('Initial filter with active tab:', selectedCategory);
+          setTimeout(() => {
+            // Defer execution to ensure DOM is updated
+            this._showCategoryLinks(selectedCategory);
+          }, 0);
+        }
       }
     }).catch(error => {
       console.error('Error analyzing links:', error);
@@ -430,6 +535,8 @@ const ModalUI = {
   createLinkCategory: function(container, category, links) {
     const categorySection = document.createElement('div');
     categorySection.className = 'niblie-link-category';
+    // Add data attribute for more reliable category identification
+    categorySection.dataset.category = category;
     categorySection.style.cssText = `
       margin-bottom: 20px;
     `;
@@ -705,5 +812,105 @@ const ModalUI = {
     
     iconWrapper.innerHTML = iconSvg;
     return iconWrapper;
+  },
+  
+  /**
+   * Filter links to show only the selected category
+   * @param {string} category - Category to show
+   * @private
+   */
+  _showCategoryLinks: function(category) {
+    console.log('Filtering links by category:', category);
+    const categories = document.querySelectorAll('.niblie-link-category');
+    console.log('Found categories:', categories.length);
+    
+    // Remove any existing "no links in category" messages
+    const existingNoLinksMsg = document.querySelector('.niblie-no-category-links');
+    if (existingNoLinksMsg) {
+      existingNoLinksMsg.remove();
+    }
+    
+    if (category === 'all') {
+      // Show all categories
+      let hasVisibleCategory = false;
+      
+      categories.forEach(cat => {
+        cat.style.display = '';
+        console.log('Showing category:', cat.dataset.category);
+        hasVisibleCategory = true;
+      });
+      
+      // If no categories with links, show message
+      if (!hasVisibleCategory) {
+        this._showNoCategoryLinksMessage('No links found on this page.');
+      }
+      
+      return;
+    }
+    
+    // Check if the selected category exists and has links
+    let categoryFound = false;
+    
+    // Show only selected category, hide others
+    categories.forEach(cat => {
+      // Use data attribute instead of text manipulation
+      const categoryName = cat.dataset.category;
+      console.log('Checking category:', categoryName, 'against', category);
+      
+      if (categoryName === category) {
+        cat.style.display = '';
+        categoryFound = true;
+        console.log('Showing category:', categoryName);
+      } else {
+        cat.style.display = 'none';
+        console.log('Hiding category:', categoryName);
+      }
+    });
+    
+    // If category doesn't exist or has no links, show message
+    if (!categoryFound) {
+      // Check if we know this category exists but has no links
+      if (this.categoriesWithLinks && this.categoriesWithLinks.hasOwnProperty(category) && !this.categoriesWithLinks[category]) {
+        this._showNoCategoryLinksMessage(`No links found in the ${this._formatCategoryName(category)} category.`);
+      } else if (category !== 'all') {
+        this._showNoCategoryLinksMessage(`No links found in the ${this._formatCategoryName(category)} category.`);
+      }
+    }
+  },
+  
+  /**
+   * Shows a message when a category has no links
+   * @param {string} message - Message to display
+   * @private
+   */
+  _showNoCategoryLinksMessage: function(message) {
+    const linksContent = document.getElementById('niblie-links-content');
+    const noLinks = document.createElement('div');
+    noLinks.className = 'niblie-no-category-links';
+    noLinks.textContent = message;
+    noLinks.style.cssText = `
+      padding: 40px 0;
+      text-align: center;
+      color: #5f6368;
+      font-style: italic;
+    `;
+    linksContent.appendChild(noLinks);
+  },
+  
+  /**
+   * Format category name for display
+   * @param {string} category - Category name
+   * @returns {string} Formatted category name
+   * @private
+   */
+  _formatCategoryName: function(category) {
+    // Remove "Links" suffix if present
+    let name = category.replace(/Links$/, '');
+    
+    // Convert camelCase to space-separated words
+    name = name.charAt(0).toUpperCase() + 
+           name.slice(1).replace(/([A-Z])/g, ' $1');
+    
+    return name;
   }
 };

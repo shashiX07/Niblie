@@ -7,6 +7,7 @@ const BadgeUI = {
   offsetX: 0,
   offsetY: 0,
   isDragging: false,
+  mouseDownOnBadge: false, // Add this flag to track badge clicks
   
   /**
    * Creates the draggable word count badge
@@ -37,10 +38,11 @@ const BadgeUI = {
       transition: opacity 0.3s;
     `;
     
-    // Make badge draggable
+    // Make badge draggable - Only add mousedown to badge
     badge.addEventListener('mousedown', this.handleMouseDown.bind(this));
-    document.addEventListener('mousemove', this.drag.bind(this));
-    document.addEventListener('mouseup', this.stopDrag.bind(this));
+    
+    // Add global event listeners with proper cleanup
+    // Add these event listeners when needed, not at creation time
     
     // Add hover effect
     badge.addEventListener('mouseenter', () => badge.style.opacity = '1');
@@ -59,6 +61,9 @@ const BadgeUI = {
   handleMouseDown: function(e) {
     e.preventDefault();
     
+    // Set flag to indicate mouse down originated on badge
+    this.mouseDownOnBadge = true;
+    
     // Record initial position and time for differentiating clicks from drags
     this.mouseDownTime = Date.now();
     this.initialX = e.clientX;
@@ -73,6 +78,10 @@ const BadgeUI = {
     
     // We'll set isDragging in the mousemove handler if the mouse really moves
     this.isDragging = false;
+    
+    // Add document event listeners only when needed
+    document.addEventListener('mousemove', this.drag.bind(this));
+    document.addEventListener('mouseup', this.stopDrag.bind(this));
   },
   
   /**
@@ -89,7 +98,8 @@ const BadgeUI = {
    * @param {MouseEvent} e - Mouse event
    */
   drag: function(e) {
-    if (!this.badge || this.mouseDownTime === undefined) return;
+    // Only process drag if mousedown started on badge
+    if (!this.badge || !this.mouseDownOnBadge || this.mouseDownTime === undefined) return;
     
     // Check if we've moved enough to be considered a drag (5px threshold)
     const moveX = Math.abs(e.clientX - this.initialX);
@@ -119,7 +129,8 @@ const BadgeUI = {
    * @param {MouseEvent} e - Mouse event
    */
   stopDrag: function(e) {
-    if (!this.badge) return;
+    // Only process if mousedown started on badge
+    if (!this.badge || !this.mouseDownOnBadge) return;
     
     // More forgiving click detection (300ms instead of 200ms)
     const isClick = !this.isDragging || 
@@ -143,6 +154,12 @@ const BadgeUI = {
       }
     }
     
+    // Reset all mouse tracking state
     this.mouseDownTime = undefined;
+    this.mouseDownOnBadge = false;
+    
+    // Remove document event listeners
+    document.removeEventListener('mousemove', this.drag.bind(this));
+    document.removeEventListener('mouseup', this.stopDrag.bind(this));
   }
 };

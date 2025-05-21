@@ -14,11 +14,9 @@
   if (typeof BadgeUI === 'undefined') {
     console.error('Error: BadgeUI module not loaded');
   }
-  
   if (typeof LinkFinder === 'undefined') {
     console.error('Error: LinkFinder module not loaded');
   }
-  
   if (typeof ModalUI === 'undefined') {
     console.error('Error: ModalUI module not loaded');
   }
