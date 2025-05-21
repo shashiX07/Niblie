@@ -11,54 +11,26 @@ const ImprovedWordCounter = {
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
     
-    // Select all text-containing elements but exclude scripts, styles, and hidden elements
-    const elements = Array.from(document.body.querySelectorAll('*')).filter(el => {
-      // Skip script, style, and non-visible elements
-      if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || 
-          el.tagName === 'NOSCRIPT' || el.tagName === 'META') {
-        return false;
-      }
-      
-      // Skip elements with no text or only whitespace
-      if (!el.textContent || el.textContent.trim() === '') {
-        return false;
-      }
-      
-      // Skip hidden elements
-      const style = window.getComputedStyle(el);
-      if (style.display === 'none' || style.visibility === 'hidden' || 
-          style.opacity === '0' || parseFloat(style.opacity) === 0) {
-        return false;
-      }
-      
-      return true;
-    });
-    
+    // More efficient selector - only get text elements
+    const selector = 'p, h1, h2, h3, h4, h5, h6, li, td, th, span, div:not(:has(*))';
+    const elements = document.querySelectorAll(selector);
     let visibleText = '';
     
-    // Process elements to extract visible text
-    elements.forEach(element => {
-      // Skip if the element has no direct text (only child elements with text)
-      if (!this._hasDirectTextNodes(element)) {
-        return;
-      }
+    // Process elements with better performance
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
       
+      // Skip hidden elements faster
+      if (element.offsetParent === null || element.clientHeight === 0) continue;
+      
+      // More efficient viewport check
       const rect = element.getBoundingClientRect();
-      
-      // Check if element is in viewport
-      if ((rect.top >= 0 && rect.top <= viewportHeight && 
-           rect.left >= 0 && rect.left <= viewportWidth) ||
-          // Element partially in viewport
-          (rect.bottom > 0 && rect.top < viewportHeight &&
-           rect.right > 0 && rect.left < viewportWidth)) {
-        
-        // Get direct text content (not from child elements)
-        const directText = this._getDirectTextContent(element);
-        if (directText.trim()) {
-          visibleText += ' ' + directText;
-        }
-      }
-    });
+      if ((rect.bottom < 0 || rect.top > viewportHeight || 
+           rect.right < 0 || rect.left > viewportWidth)) continue;
+          
+      // Get text directly
+      visibleText += ' ' + element.textContent;
+    }
     
     return visibleText;
   },

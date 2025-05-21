@@ -21,28 +21,21 @@ const initWordCounter = () => {
   }, 500); // Small delay to ensure DOM is fully processed
   
   // Update on scroll with improved debouncing
-  window.addEventListener('scroll', debounce(updateWordCount, 300));
+  window.addEventListener('scroll', debounce(updateWordCount, 500)); // Longer delay for scroll
   
   // Update on resize
-  window.addEventListener('resize', debounce(updateWordCount, 300));
+  window.addEventListener('resize', debounce(updateWordCount, 500)); // Longer delay for resize
   
   // Update on DOM changes with more specific targeting
-  const observer = new MutationObserver(mutations => {
-    // Only update if text content changed
-    const hasTextChange = mutations.some(mutation => 
-      mutation.type === 'characterData' || 
-      mutation.type === 'childList'
-    );
-    
-    if (hasTextChange) {
-      debounce(updateWordCount, 300)();
-    }
-  });
+  const observer = new MutationObserver(debounce(() => {
+    updateWordCount();
+  }, 500));
   
   observer.observe(document.body, { 
     childList: true, 
     subtree: true,
-    characterData: true 
+    characterData: true,
+    attributes: false // Don't watch attributes for better performance
   });
   
   console.log('Viewport Word Counter: Observers initialized');

@@ -23,7 +23,7 @@ const ModalUI = {
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
+      background-color: rgba(0, 0, 0, 0.7);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -42,9 +42,9 @@ const ModalUI = {
       max-width: 1000px;
       height: 80%;
       max-height: 600px;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
       overflow: hidden;
       transform: translateY(-20px);
       transition: transform 0.3s ease;
@@ -55,8 +55,8 @@ const ModalUI = {
     sidebar.className = 'niblie-sidebar';
     sidebar.style.cssText = `
       width: 200px;
-      background-color: #f5f7fa;
-      border-right: 1px solid #e4e8ed;
+      background-color: #f0f4f8;
+      border-right: 1px solid #dce5ef;
       padding: 20px 0;
       display: flex;
       flex-direction: column;
@@ -97,11 +97,11 @@ const ModalUI = {
     linksItem.style.cssText = `
       display: block;
       padding: 12px 20px;
-      color: #4285f4;
+      color: #1a73e8;
       text-decoration: none;
       font-weight: 500;
-      background-color: rgba(66, 133, 244, 0.1);
-      border-left: 4px solid #4285f4;
+      background-color: rgba(26, 115, 232, 0.1);
+      border-left: 4px solid #1a73e8;
       margin-bottom: 5px;
       transition: all 0.2s;
     `;
@@ -436,7 +436,7 @@ const ModalUI = {
     
     // Format category name for display
     const displayName = category.charAt(0).toUpperCase() + 
-                       category.slice(1).replace(/([A-Z])/g, ' $1');
+                        category.slice(1).replace(/([A-Z])/g, ' $1');
     
     // Create category header
     const header = document.createElement('div');
@@ -478,60 +478,172 @@ const ModalUI = {
     header.appendChild(icon);
     header.appendChild(title);
     
-    // Create links list
+    // Create links list with updated styling for URL display
     const linksList = document.createElement('ul');
     linksList.style.cssText = `
       list-style: none;
       padding: 0;
       margin: 0;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      display: flex;
+      flex-direction: column;
       gap: 10px;
     `;
     
-    // Add links
+    // Add links with full URLs and action buttons
     links.forEach(link => {
       const listItem = document.createElement('li');
       listItem.style.cssText = `
-        padding: 8px;
-        border-radius: 4px;
+        padding: 10px;
+        border-radius: 6px;
         transition: background-color 0.2s;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        border: 1px solid #e4e8ed;
+        background-color: #f8f9fa;
+      `;
+      
+      // Create container for URL and buttons
+      const itemContainer = document.createElement('div');
+      itemContainer.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      `;
+      
+      // URL display area
+      const urlDisplay = document.createElement('div');
+      urlDisplay.className = 'niblie-url-display';
+      urlDisplay.style.cssText = `
+        font-family: monospace;
+        font-size: 13px;
+        padding: 6px 10px;
+        background-color: #fff;
+        border: 1px solid #e4e8ed;
+        border-radius: 4px;
         white-space: nowrap;
-      `;
-      
-      const linkElement = document.createElement('a');
-      linkElement.href = link.href;
-      linkElement.textContent = link.text || link.href;
-      linkElement.title = link.href;
-      linkElement.target = '_blank';
-      linkElement.rel = 'noopener noreferrer';
-      linkElement.style.cssText = `
+        overflow-x: auto;
+        scrollbar-width: thin;
         color: #1a0dab;
-        text-decoration: none;
-        display: block;
-        overflow: hidden;
-        text-overflow: ellipsis;
+      `;
+      urlDisplay.textContent = link.href;
+      
+      // Button container
+      const buttonContainer = document.createElement('div');
+      buttonContainer.style.cssText = `
+        display: flex;
+        gap: 8px;
       `;
       
-      // Add hover effects
-      listItem.addEventListener('mouseenter', () => {
-        listItem.style.backgroundColor = '#f5f7fa';
-      });
-      
-      listItem.addEventListener('mouseleave', () => {
-        listItem.style.backgroundColor = '';
-      });
-      
-      listItem.appendChild(linkElement);
-      linksList.appendChild(listItem);
+      // Copy button
+      const copyButton = document.createElement('button');
+      copyButton.className = 'niblie-action-button niblie-copy-button';
+      copyButton.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+          <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+      </svg>
+      Copy
+    `;
+    copyButton.style.cssText = `
+      background-color: #f1f3f4;
+      color: #202124;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background-color 0.2s;
+    `;
+    
+    // Visit button
+    const visitButton = document.createElement('button');
+    visitButton.className = 'niblie-action-button niblie-visit-button';
+    visitButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+        <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+      </svg>
+      Visit
+    `;
+    visitButton.style.cssText = `
+      background-color: #e8f0fe;
+      color: #1a73e8;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background-color 0.2s;
+    `;
+    
+    // Add hover effects for buttons
+    copyButton.addEventListener('mouseenter', () => {
+      copyButton.style.backgroundColor = '#e8eaed';
     });
     
-    categorySection.appendChild(header);
-    categorySection.appendChild(linksList);
-    container.appendChild(categorySection);
-  },
+    copyButton.addEventListener('mouseleave', () => {
+      copyButton.style.backgroundColor = '#f1f3f4';
+    });
+    
+    visitButton.addEventListener('mouseenter', () => {
+      visitButton.style.backgroundColor = '#d4e6fc';
+    });
+    
+    visitButton.addEventListener('mouseleave', () => {
+      visitButton.style.backgroundColor = '#e8f0fe';
+    });
+    
+    // Add functionality to buttons
+    copyButton.addEventListener('click', () => {
+      navigator.clipboard.writeText(link.href)
+        .then(() => {
+          // Visual feedback for copy success
+          const originalText = copyButton.innerHTML;
+          copyButton.innerHTML = '✓ Copied!';
+          copyButton.style.backgroundColor = '#d2f5d2';
+          copyButton.style.color = '#0d652d';
+          
+          setTimeout(() => {
+            copyButton.innerHTML = originalText;
+            copyButton.style.backgroundColor = '#f1f3f4';
+            copyButton.style.color = '#202124';
+          }, 1500);
+        })
+        .catch(err => {
+          console.error('Could not copy text: ', err);
+        });
+    });
+    
+    visitButton.addEventListener('click', () => {
+      window.open(link.href, '_blank', 'noopener,noreferrer');
+    });
+    
+    // Add hover effect for the entire list item
+    listItem.addEventListener('mouseenter', () => {
+      listItem.style.backgroundColor = '#f0f4f8';
+    });
+    
+    listItem.addEventListener('mouseleave', () => {
+      listItem.style.backgroundColor = '#f8f9fa';
+    });
+    
+    // Assemble everything
+    buttonContainer.appendChild(copyButton);
+    buttonContainer.appendChild(visitButton);
+    itemContainer.appendChild(urlDisplay);
+    itemContainer.appendChild(buttonContainer);
+    listItem.appendChild(itemContainer);
+    linksList.appendChild(listItem);
+  });
+  
+  categorySection.appendChild(header);
+  categorySection.appendChild(linksList);
+  container.appendChild(categorySection);
+},
   
   /**
    * Get an appropriate icon for a link category

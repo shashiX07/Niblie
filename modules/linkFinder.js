@@ -1,27 +1,13 @@
 /**
- * LinkFinder module for discovering and categorizing links on a webpage
- * Separated from UI for better modularity and performance
+ * Optimized LinkFinder module with better memory management and deduplication
  */
-
 const LinkFinder = {
-  /**
-   * Cache of analyzed links to prevent redundant processing
-   */
   linkCache: null,
-  
-  /**
-   * Last URL that was analyzed
-   */
   lastAnalyzedUrl: '',
   
-  /**
-   * Find and categorize all links on the current page
-   * @param {boolean} forceRefresh - Whether to force a fresh analysis even if cached
-   * @returns {Promise<Object>} Categorized link data
-   */
   findLinks: function(forceRefresh = false) {
     return new Promise((resolve) => {
-      // Check if we have cached results for this URL
+      // Check if we have cached results for this URL (unchanged)
       const currentUrl = window.location.href;
       if (!forceRefresh && this.linkCache && this.lastAnalyzedUrl === currentUrl) {
         resolve(this.linkCache);
@@ -30,6 +16,7 @@ const LinkFinder = {
       
       // Get all links on the page
       const links = Array.from(document.querySelectorAll('a[href]'));
+      const uniqueLinks = new Map(); // Use Map for deduplication by href
       
       // Initialize link categories
       const categories = {
@@ -46,8 +33,8 @@ const LinkFinder = {
       // Get current domain for determining internal vs external
       const currentDomain = window.location.hostname;
       
-      // Process each link in chunks to avoid blocking the main thread
-      this._processLinksInChunks(links, categories, currentDomain)
+      // Process links with better memory management
+      this._processLinksOptimized(links, uniqueLinks, categories, currentDomain)
         .then(categorizedLinks => {
           // Cache the results
           this.linkCache = categorizedLinks;
@@ -57,26 +44,28 @@ const LinkFinder = {
     });
   },
   
-  /**
-   * Process links in chunks to avoid UI blocking
-   * @param {Array} links - Array of link elements
-   * @param {Object} categories - Categories object to populate
-   * @param {string} currentDomain - Current domain for comparison
-   * @returns {Promise<Object>} Completed categories
-   * @private
-   */
-  _processLinksInChunks: function(links, categories, currentDomain) {
+  _processLinksOptimized: function(links, uniqueLinks, categories, currentDomain) {
     return new Promise(resolve => {
-      const CHUNK_SIZE = 50;
+      // Increase chunk size for better performance
+      const CHUNK_SIZE = 100;
       let currentIndex = 0;
       
       const processNextChunk = () => {
-        // Process a chunk of links
         const chunkEnd = Math.min(currentIndex + CHUNK_SIZE, links.length);
+        let hasProcessedLinks = false;
         
         for (let i = currentIndex; i < chunkEnd; i++) {
           const link = links[i];
-          this._categorizeLink(link, categories, currentDomain);
+          // Skip empty or javascript: links
+          const href = link.href;
+          if (!href || href.startsWith('javascript:')) continue;
+          
+          // Deduplicate by href - only process if not seen before
+          if (!uniqueLinks.has(href)) {
+            uniqueLinks.set(href, true);
+            hasProcessedLinks = true;
+            this._categorizeLink(link, categories, currentDomain);
+          }
         }
         
         currentIndex = chunkEnd;
@@ -85,53 +74,19 @@ const LinkFinder = {
         if (currentIndex >= links.length) {
           resolve(categories);
         } else {
-          // Otherwise process the next chunk in the next animation frame
-          requestAnimationFrame(processNextChunk);
+          // If this chunk had links to process, use a small timeout
+          // Otherwise process immediately for better performance
+          if (hasProcessedLinks) {
+            setTimeout(processNextChunk, 0);
+          } else {
+            processNextChunk();
+          }
         }
       };
       
       // Start processing
       processNextChunk();
     });
-  },
-  
-  /**
-   * Categorize a single link
-   * @param {HTMLElement} link - Link element to categorize
-   * @param {Object} categories - Categories object to populate
-   * @param {string} currentDomain - Current domain for comparison
-   * @private
-   */
-  _categorizeLink: function(link, categories, currentDomain) {
-    // Skip empty or javascript: links
-    const href = link.href;
-    if (!href || href.startsWith('javascript:')) return;
-    
-    // Create link object with relevant data
-    const linkObj = {
-      href: href,
-      text: this._getDisplayText(link),
-      title: link.getAttribute('title') || '',
-      rel: link.getAttribute('rel') || '',
-      element: link
-    };
-    
-    // Categorize the link
-    if (this.isSocialLink(href)) {
-      categories.socialLinks.push(linkObj);
-    } else if (this.isEmailLink(href)) {
-      categories.emailLinks.push(linkObj);
-    } else if (this.isDocumentLink(href)) {
-      categories.documentLinks.push(linkObj);
-    } else if (this.isMediaLink(href)) {
-      categories.mediaLinks.push(linkObj);
-    } else if (this.isNavigationLink(link)) {
-      categories.navigationLinks.push(linkObj);
-    } else if (this.isInternalLink(href, currentDomain)) {
-      categories.internalLinks.push(linkObj);
-    } else {
-      categories.externalLinks.push(linkObj);
-    }
   },
   
   /**
@@ -161,6 +116,36 @@ const LinkFinder = {
     }
     
     return text;
+  },
+  
+  _categorizeLink: function(link, categories, currentDomain) {
+    const href = link.href;
+    
+    // Create link object with relevant data but without DOM reference
+    const linkObj = {
+      href: href,
+      text: this._getDisplayText(link),
+      title: link.getAttribute('title') || '',
+      rel: link.getAttribute('rel') || ''
+      // No element reference to avoid memory leaks
+    };
+    
+    // Categorize the link
+    if (this.isSocialLink(href)) {
+      categories.socialLinks.push(linkObj);
+    } else if (this.isEmailLink(href)) {
+      categories.emailLinks.push(linkObj);
+    } else if (this.isDocumentLink(href)) {
+      categories.documentLinks.push(linkObj);
+    } else if (this.isMediaLink(href)) {
+      categories.mediaLinks.push(linkObj);
+    } else if (this.isNavigationLink(link)) {
+      categories.navigationLinks.push(linkObj);
+    } else if (this.isInternalLink(href, currentDomain)) {
+      categories.internalLinks.push(linkObj);
+    } else {
+      categories.externalLinks.push(linkObj);
+    }
   },
   
   /**
@@ -298,22 +283,10 @@ const LinkFinder = {
     return false;
   },
   
-  /**
-   * Clears the link cache, freeing memory
-   */
   clearCache: function() {
-    if (this.linkCache) {
-      // Remove references to DOM elements to prevent memory leaks
-      Object.values(this.linkCache).forEach(category => {
-        category.forEach(link => {
-          if (link.element) {
-            link.element = null;
-          }
-        });
-      });
-      
-      this.linkCache = null;
-      this.lastAnalyzedUrl = '';
-    }
+    this.linkCache = null;
+    this.lastAnalyzedUrl = '';
+    // Force garbage collection by suggesting it to the browser
+    if (window.gc) window.gc();
   }
 };

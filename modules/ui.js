@@ -121,19 +121,28 @@ const BadgeUI = {
   stopDrag: function(e) {
     if (!this.badge) return;
     
-    // Check if this was a quick tap/click (less than 200ms and little movement)
-    const isClick = !this.isDragging && 
-                   Date.now() - this.mouseDownTime < 200;
+    // More forgiving click detection (300ms instead of 200ms)
+    const isClick = !this.isDragging || 
+                   (Date.now() - this.mouseDownTime < 300 && 
+                    Math.abs(e.clientX - this.initialX) < 10 && 
+                    Math.abs(e.clientY - this.initialY) < 10);
     
     this.isDragging = false;
     this.badge.style.cursor = 'move';
     
-    // If it was a click, open the modal
-    if (isClick && typeof ModalUI !== 'undefined') {
-      ModalUI.openModal();
+    // Check if ModalUI is available before trying to use it
+    if (isClick) {
+      try {
+        if (typeof ModalUI !== 'undefined') {
+          ModalUI.openModal();
+        } else {
+          console.error('ModalUI is not defined');
+        }
+      } catch (error) {
+        console.error('Error opening modal:', error);
+      }
     }
     
-    // Reset mousedown tracking
     this.mouseDownTime = undefined;
   }
 };
