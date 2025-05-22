@@ -107,6 +107,11 @@ const ModalUI = {
       transition: all 0.2s;
     `;
     
+    linksItem.addEventListener('click', (e) => {
+      e.preventDefault();
+      this._loadSection('links');
+    });
+    
     const imagesItem = document.createElement('a');
     imagesItem.className = 'niblie-nav-item';
     imagesItem.textContent = 'Images';
@@ -125,27 +130,7 @@ const ModalUI = {
 
     imagesItem.addEventListener('click', (e) => {
       e.preventDefault();
-      
-      // Update active tab
-      navItems.querySelectorAll('.niblie-nav-item').forEach(item => {
-        item.className = 'niblie-nav-item';
-        item.style.color = '#5f6368';
-        item.style.fontWeight = '400';
-        item.style.backgroundColor = '';
-        item.style.borderLeftColor = 'transparent';
-      });
-      
-      imagesItem.className = 'niblie-nav-item niblie-nav-active';
-      imagesItem.style.color = '#1a73e8';
-      imagesItem.style.fontWeight = '500';
-      imagesItem.style.backgroundColor = 'rgba(26, 115, 232, 0.1)';
-      imagesItem.style.borderLeftColor = '#1a73e8';
-      
-      // Update current section
-      this.currentSection = 'images';
-      
-      // Load images section
-      this.loadImagesSection();
+      this._loadSection('images');
     });
     
     const videosItem = document.createElement('a');
@@ -166,32 +151,34 @@ const ModalUI = {
 
     videosItem.addEventListener('click', (e) => {
       e.preventDefault();
-      
-      // Update active tab
-      navItems.querySelectorAll('.niblie-nav-item').forEach(item => {
-        item.className = 'niblie-nav-item';
-        item.style.color = '#5f6368';
-        item.style.fontWeight = '400';
-        item.style.backgroundColor = '';
-        item.style.borderLeftColor = 'transparent';
-      });
-      
-      videosItem.className = 'niblie-nav-item niblie-nav-active';
-      videosItem.style.color = '#1a73e8';
-      videosItem.style.fontWeight = '500';
-      videosItem.style.backgroundColor = 'rgba(26, 115, 232, 0.1)';
-      videosItem.style.borderLeftColor = '#1a73e8';
-      
-      // Update current section
-      this.currentSection = 'videos';
-      
-      // Load videos section
-      this.loadVideosSection();
+      this._loadSection('videos');
+    });
+    
+    const tablesItem = document.createElement('a');
+    tablesItem.className = 'niblie-nav-item';
+    tablesItem.textContent = 'Tables';
+    tablesItem.href = '#';
+    tablesItem.dataset.section = 'tables';
+    tablesItem.style.cssText = `
+      display: block;
+      padding: 12px 20px;
+      color: #5f6368;
+      text-decoration: none;
+      font-weight: 400;
+      margin-bottom: 5px;
+      border-left: 4px solid transparent;
+      transition: all 0.2s;
+    `;
+
+    tablesItem.addEventListener('click', (e) => {
+      e.preventDefault();
+      this._loadSection('tables');
     });
     
     navItems.appendChild(linksItem);
     navItems.appendChild(imagesItem);
     navItems.appendChild(videosItem);
+    navItems.appendChild(tablesItem);
     sidebar.appendChild(navItems);
     
     // Create main content area
@@ -203,6 +190,142 @@ const ModalUI = {
       overflow-y: auto;
       position: relative;
     `;
+    
+    // Add animation keyframes
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes niblie-spin {
+        to { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Assemble the modal
+    modalContent.appendChild(sidebar);
+    modalContent.appendChild(mainContent);
+    modal.appendChild(modalContent);
+    
+    // Add event listeners for easy cleanup
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        e.stopPropagation();
+        this.closeModal();
+      }
+    });
+    
+    // Add to body
+    document.body.appendChild(modal);
+    this.modal = modal;
+    
+    return modal;
+  },
+  
+  /**
+   * Opens the modal and initializes the current section
+   */
+  openModal: function() {
+    // Prevent opening if already open or in transition
+    if (this.isOpen || this.inTransition) return;
+    
+    this.inTransition = true;
+    const modal = this.createModal();
+    
+    // Add proper event listeners for scroll handling
+    document.addEventListener('wheel', this._preventScroll.bind(this), { passive: false });
+    document.addEventListener('touchmove', this._preventScroll.bind(this), { passive: false });
+    
+    // Prevent background scrolling only
+    document.body.style.overflow = 'hidden';
+    
+    // Ensure main content is scrollable
+    const mainContent = modal.querySelector('.niblie-main-content');
+    if (mainContent) {
+      mainContent.style.overflow = 'auto';
+      mainContent.style.maxHeight = 'calc(80vh - 40px)'; // Ensure there's a max height
+    }
+    
+    // Show the modal with animation
+    modal.style.visibility = 'visible';
+    
+    // Use a small timeout to trigger the animation
+    setTimeout(() => {
+      modal.style.opacity = '1';
+      modal.querySelector('.niblie-modal-content').style.transform = 'translateY(0)';
+      
+      // Initialize the current section
+      this._loadSection(this.currentSection);
+      
+      // Set open state after animation completes
+      setTimeout(() => {
+        this.isOpen = true;
+        this.inTransition = false;
+      }, 300);
+    }, 10);
+  },
+  
+  /**
+   * Closes the modal with animation
+   */
+  closeModal: function() {
+    // Prevent closing if not open or in transition
+    if (!this.isOpen || this.inTransition || !this.modal) return;
+    
+    this.inTransition = true;
+    const modal = this.modal;
+    const modalContent = modal.querySelector('.niblie-modal-content');
+    
+    // Remove scroll event listeners
+    document.removeEventListener('wheel', this._preventScroll, { passive: false });
+    document.removeEventListener('touchmove', this._preventScroll, { passive: false });
+    
+    // Animate closing
+    modalContent.style.transform = 'translateY(-20px)';
+    modal.style.opacity = '0';
+    
+    // Re-enable scrolling
+    document.body.style.overflow = '';
+    
+    // Remove after animation completes
+    setTimeout(() => {
+      modal.style.visibility = 'hidden';
+      
+      // Clear caches to free memory when modal is closed
+      if (window.LinkFinder) {
+        LinkFinder.clearCache();
+      }
+      
+      if (window.ImageFinder) {
+        ImageFinder.clearCache();
+      }
+      
+      if (window.VideoFinder) {
+        VideoFinder.clearCache();
+      }
+      
+      if (window.TableFinder) {
+        TableFinder.clearCache();
+      }
+      
+      // Reset state
+      this.isOpen = false;
+      this.inTransition = false;
+    }, 300);
+  },
+  
+  /**
+   * Loads and displays the links section content
+   * @param {boolean} forceRefresh - Whether to force refreshing link data
+   */
+  loadLinksSection: function(forceRefresh = false) {
+    // Update navigation state
+    this._updateSidebarNavigation('links');
+    
+    // Get main content area
+    const mainContent = document.querySelector('.niblie-main-content');
+    if (!mainContent) return;
+    
+    // Clear existing content
+    mainContent.innerHTML = '';
     
     // Create header with actions
     const contentHeader = document.createElement('div');
@@ -252,7 +375,7 @@ const ModalUI = {
     settingsButton.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
         <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
-        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a.873.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a.873.873 0 0 0 2.692-1.115l.094-.319z"/>
+        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z"/>
       </svg>
     `;
     settingsButton.style.cssText = `
@@ -286,21 +409,19 @@ const ModalUI = {
     // Events for buttons
     closeButton.addEventListener('click', (e) => {
       e.preventDefault();
-      e.stopPropagation();
       this.closeModal();
     });
     
     refreshButton.addEventListener('click', (e) => {
       e.preventDefault();
-      if (this.currentSection === 'links') {
-        this.loadLinksSection(true); // Force refresh
-      }
+      this.loadLinksSection(true);
     });
     
     settingsButton.addEventListener('click', (e) => {
       e.preventDefault();
-      // Settings functionality will be added in the future
-      console.log('Settings clicked');
+      if (typeof this._showSettingsView === 'function') {
+        this._showSettingsView();
+      }
     });
     
     // Add hover effects for buttons
@@ -321,54 +442,7 @@ const ModalUI = {
     contentHeader.appendChild(sectionTitle);
     contentHeader.appendChild(actionButtons);
     
-    // Create links content container
-    const linksContent = document.createElement('div');
-    linksContent.id = 'niblie-links-content';
-    linksContent.style.cssText = `
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    `;
-    
-    // Add loading indicator
-    const loadingSpinner = document.createElement('div');
-    loadingSpinner.className = 'niblie-loading';
-    loadingSpinner.innerHTML = `
-      <div class="niblie-spinner"></div>
-      <p>Analyzing links on the page...</p>
-    `;
-    loadingSpinner.style.cssText = `
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 0;
-    `;
-    
-    const spinner = loadingSpinner.querySelector('.niblie-spinner');
-    spinner.style.cssText = `
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(66, 133, 244, 0.2);
-      border-radius: 50%;
-      border-top-color: #4285f4;
-      animation: niblie-spin 1s linear infinite;
-      margin-bottom: 15px;
-    `;
-    
-    // Add animation keyframes
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes niblie-spin {
-        to { transform: rotate(360deg); }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    linksContent.appendChild(loadingSpinner);
-    
-    // After creating contentHeader but before creating linksContent
-    // Add category tabs navigation
+    // Create category tabs navigation
     const categoryTabs = document.createElement('div');
     categoryTabs.className = 'niblie-category-tabs';
     categoryTabs.style.cssText = `
@@ -417,7 +491,7 @@ const ModalUI = {
       // Handle tab selection
       tab.addEventListener('click', () => {
         // Update active tab styles
-        document.querySelectorAll('.niblie-tab').forEach(t => {
+        categoryTabs.querySelectorAll('.niblie-tab').forEach(t => {
           t.style.backgroundColor = 'transparent';
           t.style.color = '#5f6368';
           t.style.fontWeight = 'normal';
@@ -436,181 +510,252 @@ const ModalUI = {
       categoryTabs.appendChild(tab);
     });
     
-    // Add tabs after header
+    // Create links content container
+    const linksContent = document.createElement('div');
+    linksContent.id = 'niblie-links-content';
+    linksContent.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    `;
+    
+    // Add loading indicator
+    const loadingSpinner = document.createElement('div');
+    loadingSpinner.className = 'niblie-loading';
+    loadingSpinner.innerHTML = `
+      <div class="niblie-spinner"></div>
+      <p>Analyzing links on the page...</p>
+    `;
+    loadingSpinner.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 0;
+    `;
+    
+    const spinner = loadingSpinner.querySelector('.niblie-spinner');
+    spinner.style.cssText = `
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(66, 133, 244, 0.2);
+      border-radius: 50%;
+      border-top-color: #4285f4;
+      animation: niblie-spin 1s linear infinite;
+      margin-bottom: 15px;
+    `;
+    
+    linksContent.appendChild(loadingSpinner);
+    
+    // Add all elements to main content
     mainContent.appendChild(contentHeader);
     mainContent.appendChild(categoryTabs);
     mainContent.appendChild(linksContent);
     
-    // Assemble the modal
-    modalContent.appendChild(sidebar);
-    modalContent.appendChild(mainContent);
-    modal.appendChild(modalContent);
-    
-    // Add event listeners for easy cleanup
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        e.stopPropagation();
-        this.closeModal();
-      }
-    });
-    
-    // Prevent scrolling on body when modal is open
-    document.body.appendChild(modal);
-    this.modal = modal;
-    
-    return modal;
-  },
-  
-  /**
-   * Opens the modal and initializes the current section
-   */
-  openModal: function() {
-    // Prevent opening if already open or in transition
-    if (this.isOpen || this.inTransition) return;
-    
-    this.inTransition = true;
-    const modal = this.createModal();
-    
-    // Prevent background scrolling
-    document.body.style.overflow = 'hidden';
-    
-    // Show the modal with animation
-    modal.style.visibility = 'visible';
-    
-    // Use a small timeout to trigger the animation
-    setTimeout(() => {
-      modal.style.opacity = '1';
-      modal.querySelector('.niblie-modal-content').style.transform = 'translateY(0)';
-      
-      // Initialize the links section
-      if (this.currentSection === 'links') {
-        this.loadLinksSection();
-      }
-      
-      // Set open state after animation completes
-      setTimeout(() => {
-        this.isOpen = true;
-        this.inTransition = false;
-      }, 300);
-    }, 10);
-  },
-  
-  /**
-   * Closes the modal with animation
-   */
-  closeModal: function() {
-    // Prevent closing if not open or in transition
-    if (!this.isOpen || this.inTransition || !this.modal) return;
-    
-    this.inTransition = true;
-    const modal = this.modal;
-    const modalContent = modal.querySelector('.niblie-modal-content');
-    
-    // Animate closing
-    modalContent.style.transform = 'translateY(-20px)';
-    modal.style.opacity = '0';
-    
-    // Re-enable scrolling
-    document.body.style.overflow = '';
-    
-    // Remove after animation completes
-    setTimeout(() => {
-      modal.style.visibility = 'hidden';
-      
-      // Clear link finder cache to free memory when modal is closed
-      if (window.LinkFinder) {
-        LinkFinder.clearCache();
-      }
-      
-      // Reset state
-      this.isOpen = false;
-      this.inTransition = false;
-    }, 300);
-  },
-  
-  /**
-   * Loads and displays the links section content
-   * @param {boolean} forceRefresh - Whether to force refreshing link data
-   */
-  loadLinksSection: function(forceRefresh = false) {
-    // IMPORTANT: Fix sidebar navigation first - ensure all nav items work 
-    this._updateSidebarNavigation('links');
-    
-    const linksContent = document.getElementById('niblie-links-content');
-    
-    // Clear existing content except loading indicator
-    while (linksContent.firstChild && !linksContent.firstChild.classList.contains('niblie-loading')) {
-      linksContent.removeChild(linksContent.firstChild);
-    }
-    
-    const loadingSpinner = linksContent.querySelector('.niblie-loading');
-    loadingSpinner.style.display = 'flex';
-    
     // Use LinkFinder to get link data
-    LinkFinder.findLinks(forceRefresh).then(linkData => {
-      // Hide loading spinner
-      loadingSpinner.style.display = 'none';
-      
-      // Create link category sections
-      let hasLinks = false;
-      
-      // Track which categories have links for later use in tab filtering
-      const categoriesWithLinks = {};
-      
-      Object.keys(linkData).forEach(category => {
-        const links = linkData[category];
-        categoriesWithLinks[category] = links.length > 0;
-        
-        if (links.length === 0) return;
-        
-        hasLinks = true;
-        
-        // Create category section
-        this.createLinkCategory(linksContent, category, links);
-      });
-      
-      // Store categories with links for tab filtering
-      this.categoriesWithLinks = categoriesWithLinks;
-      
-      // If no links were found
-      if (!hasLinks) {
-        const noLinks = document.createElement('div');
-        noLinks.className = 'niblie-no-links';
-        noLinks.textContent = 'No links found on this page.';
-        noLinks.style.cssText = `
-          padding: 40px 0;
-          text-align: center;
-          color: #5f6368;
-          font-style: italic;
-        `;
-        linksContent.appendChild(noLinks);
+    if (window.LinkFinder) {
+      console.log('Using LinkFinder from window');
+      window.LinkFinder.findLinks(forceRefresh)
+        .then(linkData => {
+          // Hide loading spinner
+          loadingSpinner.style.display = 'none';
+          
+          // Create link category sections
+          let hasLinks = false;
+          
+          // Track which categories have links for tab filtering
+          const categoriesWithLinks = {};
+          
+          Object.keys(linkData).forEach(category => {
+            const links = linkData[category];
+            categoriesWithLinks[category] = links.length > 0;
+            
+            if (links.length === 0) return;
+            
+            hasLinks = true;
+            
+            // Create category section
+            this.createLinkCategory(linksContent, category, links);
+          });
+          
+          // Store categories with links for tab filtering
+          this.categoriesWithLinks = categoriesWithLinks;
+          
+          // If no links were found
+          if (!hasLinks) {
+            const noLinks = document.createElement('div');
+            noLinks.className = 'niblie-no-links';
+            noLinks.textContent = 'No links found on this page.';
+            noLinks.style.cssText = `
+              padding: 40px 0;
+              text-align: center;
+              color: #5f6368;
+              font-style: italic;
+            `;
+            linksContent.appendChild(noLinks);
+          } else {
+            // Apply current tab filter
+            const activeTab = categoryTabs.querySelector('.niblie-tab.active');
+            if (activeTab) {
+              const selectedCategory = activeTab.dataset.category;
+              setTimeout(() => {
+                // Defer execution to ensure DOM is updated
+                this._showCategoryLinks(selectedCategory);
+              }, 0);
+            }
+          }
+        }).catch(error => {
+          console.error('Error analyzing links:', error);
+          loadingSpinner.style.display = 'none';
+          
+          // Show error message
+          const errorMsg = document.createElement('div');
+          errorMsg.className = 'niblie-error';
+          errorMsg.textContent = 'An error occurred while analyzing links.';
+          errorMsg.style.cssText = `
+            padding: 40px 0;
+            text-align: center;
+            color: #d93025;
+          `;
+          linksContent.appendChild(errorMsg);
+        });
+    } else if (window.ExtModules && window.ExtModules.LinkFinder) {
+      console.log('Using LinkFinder from ExtModules');
+      window.ExtModules.LinkFinder.findLinks(forceRefresh)
+        .then(linkData => {
+          // Hide loading spinner
+          loadingSpinner.style.display = 'none';
+          
+          // Create link category sections
+          let hasLinks = false;
+          
+          // Track which categories have links for tab filtering
+          const categoriesWithLinks = {};
+          
+          Object.keys(linkData).forEach(category => {
+            const links = linkData[category];
+            categoriesWithLinks[category] = links.length > 0;
+            
+            if (links.length === 0) return;
+            
+            hasLinks = true;
+            
+            // Create category section
+            this.createLinkCategory(linksContent, category, links);
+          });
+          
+          // Store categories with links for tab filtering
+          this.categoriesWithLinks = categoriesWithLinks;
+          
+          // If no links were found
+          if (!hasLinks) {
+            const noLinks = document.createElement('div');
+            noLinks.className = 'niblie-no-links';
+            noLinks.textContent = 'No links found on this page.';
+            noLinks.style.cssText = `
+              padding: 40px 0;
+              text-align: center;
+              color: #5f6368;
+              font-style: italic;
+            `;
+            linksContent.appendChild(noLinks);
+          } else {
+            // Apply current tab filter
+            const activeTab = categoryTabs.querySelector('.niblie-tab.active');
+            if (activeTab) {
+              const selectedCategory = activeTab.dataset.category;
+              setTimeout(() => {
+                // Defer execution to ensure DOM is updated
+                this._showCategoryLinks(selectedCategory);
+              }, 0);
+            }
+          }
+        }).catch(error => {
+          console.error('Error analyzing links:', error);
+          loadingSpinner.style.display = 'none';
+          
+          // Show error message
+          const errorMsg = document.createElement('div');
+          errorMsg.className = 'niblie-error';
+          errorMsg.textContent = 'An error occurred while analyzing links.';
+          errorMsg.style.cssText = `
+            padding: 40px 0;
+            text-align: center;
+            color: #d93025;
+          `;
+          linksContent.appendChild(errorMsg);
+        });
+    } else {
+      // Try to wait for it to load
+      if (window.ModuleLoader) {
+        window.ModuleLoader.waitForModule('LinkFinder', 5)
+          .then(linkFinder => {
+            console.log('LinkFinder loaded via ModuleLoader');
+            linkFinder.findLinks(forceRefresh)
+              .then(linkData => {
+                // Hide loading spinner
+                loadingSpinner.style.display = 'none';
+                
+                // Create link category sections
+                let hasLinks = false;
+                
+                // Track which categories have links for later use in tab filtering
+                const categoriesWithLinks = {};
+                
+                Object.keys(linkData).forEach(category => {
+                  const links = linkData[category];
+                  categoriesWithLinks[category] = links.length > 0;
+                  
+                  if (links.length === 0) return;
+                  
+                  hasLinks = true;
+                  
+                  // Create category section
+                  this.createLinkCategory(linksContent, category, links);
+                });
+                
+                // Store categories with links for tab filtering
+                this.categoriesWithLinks = categoriesWithLinks;
+                
+                // If no links were found
+                if (!hasLinks) {
+                  const noLinks = document.createElement('div');
+                  noLinks.className = 'niblie-no-links';
+                  noLinks.textContent = 'No links found on this page.';
+                  noLinks.style.cssText = `
+                    padding: 40px 0;
+                    text-align: center;
+                    color: #5f6368;
+                    font-style: italic;
+                  `;
+                  linksContent.appendChild(noLinks);
+                } else {
+                  // Apply current tab filter
+                  const activeTab = categoryTabs.querySelector('.niblie-tab.active');
+                  if (activeTab) {
+                    const selectedCategory = activeTab.dataset.category;
+                    setTimeout(() => {
+                      // Defer execution to ensure DOM is updated
+                      this._showCategoryLinks(selectedCategory);
+                    }, 0);
+                  }
+                }
+              }).catch(error => {
+                console.error('Error analyzing links:', error);
+                loadingSpinner.style.display = 'none';
+                showErrorMessage('An error occurred while analyzing links.');
+              });
+          })
+          .catch(error => {
+            console.error('Failed to load LinkFinder module:', error);
+            loadingSpinner.style.display = 'none';
+            showErrorMessage('Link finder module is not available.');
+          });
       } else {
-        // Apply current tab filter
-        const activeTab = document.querySelector('.niblie-tab.active');
-        if (activeTab) {
-          const selectedCategory = activeTab.dataset.category;
-          console.log('Initial filter with active tab:', selectedCategory);
-          setTimeout(() => {
-            // Defer execution to ensure DOM is updated
-            this._showCategoryLinks(selectedCategory);
-          }, 0);
-        }
+        loadingSpinner.style.display = 'none';
+        showErrorMessage('Link finder module is not available.');
       }
-    }).catch(error => {
-      console.error('Error analyzing links:', error);
-      loadingSpinner.style.display = 'none';
-      
-      // Show error message
-      const errorMsg = document.createElement('div');
-      errorMsg.className = 'niblie-error';
-      errorMsg.textContent = 'An error occurred while analyzing links.';
-      errorMsg.style.cssText = `
-        padding: 40px 0;
-        text-align: center;
-        color: #d93025;
-      `;
-      linksContent.appendChild(errorMsg);
-    });
+    }
   },
   
   /**
@@ -618,7 +763,7 @@ const ModalUI = {
    * @param {boolean} forceRefresh - Whether to force refreshing image data
    */
   loadImagesSection: function(forceRefresh = false) {
-    // IMPORTANT: Fix sidebar navigation first - ensure all nav items work
+    // Update navigation state
     this._updateSidebarNavigation('images');
     
     // Get main content area
@@ -651,7 +796,6 @@ const ModalUI = {
     const actionButtons = document.createElement('div');
     actionButtons.className = 'niblie-actions';
     
-    // Create buttons
     const refreshButton = document.createElement('button');
     refreshButton.className = 'niblie-button niblie-refresh-button';
     refreshButton.innerHTML = `
@@ -677,7 +821,7 @@ const ModalUI = {
     settingsButton.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
         <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
-        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a.873.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a.873.873 0 0 0 2.692-1.115l.094-.319z"/>
+        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z"/>
       </svg>
     `;
     settingsButton.style.cssText = `
@@ -708,7 +852,7 @@ const ModalUI = {
       transition: background-color 0.2s;
     `;
     
-    // Button events
+    // Events for buttons
     closeButton.addEventListener('click', (e) => {
       e.preventDefault();
       this.closeModal();
@@ -801,7 +945,6 @@ const ModalUI = {
     const actionButtons = document.createElement('div');
     actionButtons.className = 'niblie-actions';
     
-    // Create buttons
     const refreshButton = document.createElement('button');
     refreshButton.className = 'niblie-button niblie-refresh-button';
     refreshButton.innerHTML = `
@@ -822,6 +965,25 @@ const ModalUI = {
     `;
     refreshButton.title = "Refresh videos";
     
+    const settingsButton = document.createElement('button');
+    settingsButton.className = 'niblie-button niblie-settings-button';
+    settingsButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z"/>
+      </svg>
+    `;
+    settingsButton.style.cssText = `
+      background: none;
+      border: none;
+      color: #5f6368;
+      cursor: pointer;
+      padding: 8px;
+      margin-right: 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    `;
+    
     const closeButton = document.createElement('button');
     closeButton.className = 'niblie-button niblie-close-button';
     closeButton.innerHTML = `
@@ -839,7 +1001,7 @@ const ModalUI = {
       transition: background-color 0.2s;
     `;
     
-    // Button events
+    // Events for buttons
     closeButton.addEventListener('click', (e) => {
       e.preventDefault();
       this.closeModal();
@@ -850,8 +1012,15 @@ const ModalUI = {
       this.loadVideosSection(true);
     });
     
+    settingsButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (typeof this._showSettingsView === 'function') {
+        this._showSettingsView();
+      }
+    });
+    
     // Add hover effects
-    [closeButton, refreshButton].forEach(btn => {
+    [closeButton, settingsButton, refreshButton].forEach(btn => {
       btn.addEventListener('mouseenter', () => {
         btn.style.backgroundColor = '#f1f3f4';
         btn.style.color = '#202124';
@@ -863,6 +1032,81 @@ const ModalUI = {
     });
     
     actionButtons.appendChild(refreshButton);
+    
+    const scanAllButton = document.createElement('button');
+    scanAllButton.className = 'niblie-button niblie-scan-all-button';
+    scanAllButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+      </svg>
+    `;
+    scanAllButton.style.cssText = `
+      background: none;
+      border: none;
+      color: #5f6368;
+      cursor: pointer;
+      padding: 8px;
+      margin-right: 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    `;
+    scanAllButton.title = "Scan entire page for videos";
+    
+    // Add event listener for scan all button
+    scanAllButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      // Show loading indicator
+      mainContent.innerHTML = '';
+      mainContent.appendChild(contentHeader);
+      
+      const loadingIndicator = document.createElement('div');
+      loadingIndicator.className = 'niblie-loading';
+      loadingIndicator.innerHTML = `
+        <div class="niblie-spinner"></div>
+        <p>Scanning entire page for videos...</p>
+      `;
+      loadingIndicator.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 0;
+      `;
+      
+      const spinner = loadingIndicator.querySelector('.niblie-spinner');
+      spinner.style.cssText = `
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(66, 133, 244, 0.2);
+        border-radius: 50%;
+        border-top-color: #4285f4;
+        animation: niblie-spin 1s linear infinite;
+        margin-bottom: 15px;
+      `;
+      
+      mainContent.appendChild(loadingIndicator);
+      
+      // Call VideoFinder with scanEntirePage flag
+      if (window.VideoFinder) {
+        // Clear cache to force fresh scan
+        window.VideoFinder.clearCache();
+        
+        // Set a flag to scan entire page
+        window.VideoFinder.scanEntirePage = true;
+        
+        // Reload the videos section with force refresh
+        setTimeout(() => {
+          this.loadVideosSection(true);
+          
+          // Reset flag after scan
+          window.VideoFinder.scanEntirePage = false;
+        }, 100);
+      }
+    });
+    
+    actionButtons.appendChild(scanAllButton);
+    actionButtons.appendChild(settingsButton);
     actionButtons.appendChild(closeButton);
     contentHeader.appendChild(sectionTitle);
     contentHeader.appendChild(actionButtons);
@@ -871,7 +1115,7 @@ const ModalUI = {
     mainContent.appendChild(contentHeader);
     
     // Create and add videos content
-    if (window.VideoUI && typeof window.VideoUI.createVideosContent === 'function') {
+    if (window.VideoUI) {
       const videosContent = VideoUI.createVideosContent(forceRefresh);
       mainContent.appendChild(videosContent);
     } else {
@@ -883,75 +1127,299 @@ const ModalUI = {
         color: #d93025;
       `;
       mainContent.appendChild(errorMsg);
-      console.error('VideoUI module not found or createVideosContent method is missing');
+    }
+  },
+
+  /**
+   * Loads and displays the tables section content
+   * @param {boolean} forceRefresh - Whether to force refreshing table data
+   */
+  loadTablesSection: function(forceRefresh = false) {
+    // Update navigation state
+    this._updateSidebarNavigation('tables');
+    
+    // Get main content area
+    const mainContent = document.querySelector('.niblie-main-content');
+    if (!mainContent) return;
+    
+    // Clear existing content
+    mainContent.innerHTML = '';
+    
+    // Create header with actions
+    const contentHeader = document.createElement('div');
+    contentHeader.className = 'niblie-content-header';
+    contentHeader.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #e4e8ed;
+    `;
+    
+    const sectionTitle = document.createElement('h2');
+    sectionTitle.textContent = 'Tables on This Page';
+    sectionTitle.style.cssText = `
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+    `;
+    
+    const actionButtons = document.createElement('div');
+    actionButtons.className = 'niblie-actions';
+    
+    const refreshButton = document.createElement('button');
+    refreshButton.className = 'niblie-button niblie-refresh-button';
+    refreshButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+      </svg>
+    `;
+    refreshButton.style.cssText = `
+      background: none;
+      border: none;
+      color: #5f6368;
+      cursor: pointer;
+      padding: 8px;
+      margin-right: 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    `;
+    refreshButton.title = "Refresh tables";
+    
+    const settingsButton = document.createElement('button');
+    settingsButton.className = 'niblie-button niblie-settings-button';
+    settingsButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z"/>
+      </svg>
+    `;
+    settingsButton.style.cssText = `
+      background: none;
+      border: none;
+      color: #5f6368;
+      cursor: pointer;
+      padding: 8px;
+      margin-right: 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    `;
+    
+    const closeButton = document.createElement('button');
+    closeButton.className = 'niblie-button niblie-close-button';
+    closeButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+      </svg>
+    `;
+    closeButton.style.cssText = `
+      background: none;
+      border: none;
+      color: #5f6368;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    `;
+    
+    // Events for buttons
+    closeButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.closeModal();
+    });
+    
+    refreshButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.loadTablesSection(true);
+    });
+    
+    settingsButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (typeof this._showSettingsView === 'function') {
+        this._showSettingsView();
+      }
+    });
+    
+    // Add hover effects
+    [closeButton, settingsButton, refreshButton].forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        btn.style.backgroundColor = '#f1f3f4';
+        btn.style.color = '#202124';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.backgroundColor = '';
+        btn.style.color = '#5f6368';
+      });
+    });
+    
+    // Add scan all button
+    const scanAllButton = document.createElement('button');
+    scanAllButton.className = 'niblie-button niblie-scan-all-button';
+    scanAllButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+      </svg>
+    `;
+    scanAllButton.style.cssText = `
+      background: none;
+      border: none;
+      color: #5f6368;
+      cursor: pointer;
+      padding: 8px;
+      margin-right: 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    `;
+    scanAllButton.title = "Scan entire page for tables";
+    
+    // Add event listener for scan all button
+    scanAllButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      // Show loading indicator
+      mainContent.innerHTML = '';
+      mainContent.appendChild(contentHeader);
+      
+      const loadingIndicator = document.createElement('div');
+      loadingIndicator.className = 'niblie-loading';
+      loadingIndicator.innerHTML = `
+        <div class="niblie-spinner"></div>
+        <p>Scanning entire page for tables...</p>
+      `;
+      loadingIndicator.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 0;
+      `;
+      
+      const spinner = loadingIndicator.querySelector('.niblie-spinner');
+      spinner.style.cssText = `
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(66, 133, 244, 0.2);
+        border-radius: 50%;
+        border-top-color: #4285f4;
+        animation: niblie-spin 1s linear infinite;
+        margin-bottom: 15px;
+      `;
+      
+      mainContent.appendChild(loadingIndicator);
+      
+      // Call TableFinder with scanEntirePage flag
+      if (window.TableFinder) {
+        // Clear cache to force fresh scan
+        window.TableFinder.clearCache();
+        
+        // Set a flag to scan entire page
+        window.TableFinder.scanEntirePage = true;
+        
+        // Reload the tables section with force refresh
+        setTimeout(() => {
+          this.loadTablesSection(true);
+          
+          // Reset flag after scan
+          window.TableFinder.scanEntirePage = false;
+        }, 100);
+      }
+    });
+    
+    // Add the button to actionButtons, just after refreshButton
+    actionButtons.appendChild(refreshButton);
+    actionButtons.appendChild(scanAllButton);
+    actionButtons.appendChild(settingsButton);
+    actionButtons.appendChild(closeButton);
+    contentHeader.appendChild(sectionTitle);
+    contentHeader.appendChild(actionButtons);
+    
+    // Add header to main content
+    mainContent.appendChild(contentHeader);
+    
+    // Create and add tables content
+    if (window.TableUI && typeof window.TableUI.createTablesContent === 'function') {
+      console.log('TableUI found in global scope');
+      try {
+        const tablesContent = window.TableUI.createTablesContent(forceRefresh);
+        mainContent.appendChild(tablesContent);
+      } catch (error) {
+        console.error('Error creating tables content:', error);
+        this._showErrorMessage(mainContent, 'An error occurred while creating tables content.');
+      }
+    } else if (window.ExtModules && window.ExtModules.TableUI && 
+              typeof window.ExtModules.TableUI.createTablesContent === 'function') {
+      console.log('TableUI found in ExtModules');
+      try {
+        const tablesContent = window.ExtModules.TableUI.createTablesContent(forceRefresh);
+        mainContent.appendChild(tablesContent);
+      } catch (error) {
+        console.error('Error creating tables content from ExtModules:', error);
+        this._showErrorMessage(mainContent, 'An error occurred while creating tables content.');
+      }
+    } else {
+      console.error('TableUI not found in any scope');
+      this._showErrorMessage(mainContent, 'Table finder module is not available.');
+      
+      // Try to re-register modules if possible
+      if (typeof registerModules === 'function') {
+        console.log('Attempting to re-register modules');
+        registerModules();
+        
+        // Check again after a short delay
+        setTimeout(() => {
+          if (window.TableUI || (window.ExtModules && window.ExtModules.TableUI)) {
+            console.log('TableUI found after re-registration, reloading');
+            this.loadTablesSection(forceRefresh);
+          }
+        }, 500);
+      }
     }
   },
   
   /**
-   * Opens the settings view
-   * @private
-   */
-  _showSettingsView: function() {
-    // For now, just log to console
-    console.log('Settings view is not implemented yet.');
-  },
-  
-  /**
-   * Gets the current section (links or images)
-   * @returns {string} - Current section ID
-   * @private
-   */
-  _getCurrentSection: function() {
-    return this.currentSection;
-  },
-  
-  /**
-   * Sets the current section (links or images)
-   * @param {string} section - Section ID to set as current
-   * @private
-   */
-  _setCurrentSection: function(section) {
-    this.currentSection = section;
-  },
-  
-  /**
-   * Creates a link category section
-   * @param {HTMLElement} container - Container to append to
+   * Creates a link category section in the UI
+   * @param {HTMLElement} container - Container element to append the category to
    * @param {string} category - Category name
    * @param {Array} links - Array of link objects
    */
   createLinkCategory: function(container, category, links) {
+    // Skip if no links
+    if (!links || links.length === 0) return;
+    
+    // Create category section
     const categorySection = document.createElement('div');
     categorySection.className = 'niblie-link-category';
-    // Add data attribute for more reliable category identification
     categorySection.dataset.category = category;
     categorySection.style.cssText = `
-      margin-bottom: 20px;
+      margin-bottom: 30px;
     `;
     
-    // Format category name for display
-    const displayName = category.charAt(0).toUpperCase() + 
-                        category.slice(1).replace(/([A-Z])/g, ' $1');
-    
-    // Create category header
+    // Category header
     const header = document.createElement('div');
     header.className = 'niblie-category-header';
     header.style.cssText = `
       display: flex;
       align-items: center;
       margin-bottom: 10px;
-      padding-bottom: 5px;
+      padding-bottom: 8px;
       border-bottom: 1px solid #e4e8ed;
     `;
     
+    // Get icon for category
     const icon = this.getCategoryIcon(category);
     icon.style.cssText = `
-      margin-right: 8px;
-      color: #4285f4;
+      margin-right: 10px;
+      color: #5f6368;
     `;
     
+    // Format category name
+    let categoryName = category.replace(/Links$/, '');
+    categoryName = categoryName.charAt(0).toUpperCase() + categoryName.slice(1).replace(/([A-Z])/g, ' $1');
+    
     const title = document.createElement('h3');
-    title.textContent = displayName;
+    title.textContent = categoryName;
     title.style.cssText = `
       margin: 0;
       font-size: 16px;
@@ -959,177 +1427,182 @@ const ModalUI = {
     `;
     
     const count = document.createElement('span');
-    count.textContent = `${links.length}`;
+    count.textContent = links.length;
     count.style.cssText = `
-      margin-left: 8px;
-      background-color: #e8f0fe;
-      color: #4285f4;
-      font-size: 12px;
-      padding: 2px 8px;
+      margin-left: 10px;
+      background-color: #f1f3f4;
       border-radius: 10px;
+      padding: 2px 8px;
+      font-size: 12px;
+      color: #5f6368;
     `;
     
     title.appendChild(count);
     header.appendChild(icon);
     header.appendChild(title);
     
-    // Create links list with updated styling for URL display
+    // Create links list
     const linksList = document.createElement('ul');
     linksList.style.cssText = `
       list-style: none;
-      padding: 0;
       margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      padding: 0;
     `;
     
-    // Add links with full URLs and action buttons
+    // Add each link as a list item
     links.forEach(link => {
       const listItem = document.createElement('li');
       listItem.style.cssText = `
-        padding: 10px;
-        border-radius: 6px;
-        transition: background-color 0.2s;
-        border: 1px solid #e4e8ed;
-        background-color: #f8f9fa;
+        margin-bottom: 8px;
       `;
       
-      // Create container for URL and buttons
+      // Item container with flex layout
       const itemContainer = document.createElement('div');
       itemContainer.style.cssText = `
         display: flex;
-        flex-direction: column;
-        gap: 8px;
-      `;
-      
-      // URL display area
-      const urlDisplay = document.createElement('div');
-      urlDisplay.className = 'niblie-url-display';
-      urlDisplay.style.cssText = `
-        font-family: monospace;
-        font-size: 13px;
-        padding: 6px 10px;
+        justify-content: space-between;
+        align-items: center;
         background-color: #fff;
         border: 1px solid #e4e8ed;
-        border-radius: 4px;
+        border-radius: 8px;
+        padding: 10px;
+        transition: all 0.2s;
+      `;
+      
+      itemContainer.addEventListener('mouseenter', () => {
+        itemContainer.style.backgroundColor = '#f8f9fa';
+        itemContainer.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+      });
+      
+      itemContainer.addEventListener('mouseleave', () => {
+        itemContainer.style.backgroundColor = '#fff';
+        itemContainer.style.boxShadow = '';
+      });
+      
+      // Link text and URL
+      const linkText = document.createElement('div');
+      linkText.style.cssText = `
+        flex-grow: 1;
+        overflow: hidden;
+      `;
+      
+      // CHANGED: Swapped display priority - URL first, then text
+      const linkUrl = document.createElement('div');
+      linkUrl.textContent = link.href; // FIXED: Using href instead of url
+      linkUrl.title = link.href; // FIXED: Using href instead of url
+      linkUrl.style.cssText = `
+        font-weight: 500;
         white-space: nowrap;
-        overflow-x: auto;
-        scrollbar-width: thin;
-        color: #1a0dab;
-      `;
-      urlDisplay.textContent = link.href;
-      
-      // Button container
-      const buttonContainer = document.createElement('div');
-      buttonContainer.style.cssText = `
-        display: flex;
-        gap: 8px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 2px;
       `;
       
-      // Copy button
-      const copyButton = document.createElement('button');
-      copyButton.className = 'niblie-action-button niblie-copy-button';
-      copyButton.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-          <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
-      </svg>
-      Copy
-    `;
-    copyButton.style.cssText = `
-      background-color: #f1f3f4;
-      color: #202124;
-      border: none;
-      border-radius: 4px;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-size: 13px;
+      const linkTitle = document.createElement('div');
+      linkTitle.textContent = link.text || '';
+      linkTitle.title = link.text || '';
+      linkTitle.style.cssText = `
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #5f6368;
+      `;
+      
+      linkText.appendChild(linkUrl); // URL first
+      linkText.appendChild(linkTitle); // Text second
+    
+    // Action buttons
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'niblie-link-actions';
+    buttonContainer.style.cssText = `
+      margin-left: 15px;
       display: flex;
-      align-items: center;
-      gap: 4px;
-      transition: background-color 0.2s;
+      gap: 5px;
     `;
     
-    // Visit button
-    const visitButton = document.createElement('button');
-    visitButton.className = 'niblie-action-button niblie-visit-button';
-    visitButton.innerHTML = `
+    const copyButton = document.createElement('button');
+    copyButton.className = 'niblie-button niblie-copy-button';
+    copyButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+        <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+      </svg>
+    `;
+    copyButton.style.cssText = `
+      background: none;
+      border: none;
+      color: #5f6368;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    `;
+    copyButton.title = "Copy link URL";
+    
+    const openButton = document.createElement('button');
+    openButton.className = 'niblie-button niblie-open-button';
+    openButton.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
         <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
         <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
       </svg>
-      Visit
     `;
-    visitButton.style.cssText = `
-      background-color: #e8f0fe;
-      color: #1a73e8;
+    openButton.style.cssText = `
+      background: none;
       border: none;
-      border-radius: 4px;
-      padding: 6px 12px;
+      color: #5f6368;
       cursor: pointer;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      transition: background-color 0.2s;
+      padding: 5px;
+      border-radius: 4px;
+      transition: all 0.2s;
     `;
+    openButton.title = "Open link in new tab";
     
-    // Add hover effects for buttons
-    copyButton.addEventListener('mouseenter', () => {
-      copyButton.style.backgroundColor = '#e8eaed';
+    // Button hover effects
+    [copyButton, openButton].forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        btn.style.backgroundColor = '#f1f3f4';
+        btn.style.color = '#202124';
+      });
+      
+      btn.addEventListener('mouseleave', () => {
+        btn.style.backgroundColor = '';
+        btn.style.color = '#5f6368';
+      });
     });
     
-    copyButton.addEventListener('mouseleave', () => {
-      copyButton.style.backgroundColor = '#f1f3f4';
-    });
-    
-    visitButton.addEventListener('mouseenter', () => {
-      visitButton.style.backgroundColor = '#d4e6fc';
-    });
-    
-    visitButton.addEventListener('mouseleave', () => {
-      visitButton.style.backgroundColor = '#e8f0fe';
-    });
-    
-    // Add functionality to buttons
+    // FIXED: Button actions - using href instead of url
     copyButton.addEventListener('click', () => {
-      navigator.clipboard.writeText(link.href)
-        .then(() => {
-          // Visual feedback for copy success
-          const originalText = copyButton.innerHTML;
-          copyButton.innerHTML = '✓ Copied!';
-          copyButton.style.backgroundColor = '#d2f5d2';
-          copyButton.style.color = '#0d652d';
-          
-          setTimeout(() => {
-            copyButton.innerHTML = originalText;
-            copyButton.style.backgroundColor = '#f1f3f4';
-            copyButton.style.color = '#202124';
-          }, 1500);
-        })
-        .catch(err => {
-          console.error('Could not copy text: ', err);
-        });
+      navigator.clipboard.writeText(link.href).then(() => {
+        copyButton.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+          </svg>
+        `;
+        copyButton.style.color = '#34A853';
+        
+        setTimeout(() => {
+          copyButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+              <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5  0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+            </svg>
+          `;
+          copyButton.style.color = '#5f6368';
+        }, 2000);
+      }).catch(err => {
+        console.error('Could not copy text: ', err);
+      });
     });
     
-    visitButton.addEventListener('click', () => {
-      window.open(link.href, '_blank', 'noopener,noreferrer');
+    openButton.addEventListener('click', () => {
+      window.open(link.href, '_blank'); // FIXED: Using href instead of url
     });
     
-    // Add hover effect for the entire list item
-    listItem.addEventListener('mouseenter', () => {
-      listItem.style.backgroundColor = '#f0f4f8';
-    });
-    
-    listItem.addEventListener('mouseleave', () => {
-      listItem.style.backgroundColor = '#f8f9fa';
-    });
-    
-    // Assemble everything
     buttonContainer.appendChild(copyButton);
-    buttonContainer.appendChild(visitButton);
-    itemContainer.appendChild(urlDisplay);
+    buttonContainer.appendChild(openButton);
+    itemContainer.appendChild(linkText);
     itemContainer.appendChild(buttonContainer);
     listItem.appendChild(itemContainer);
     linksList.appendChild(listItem);
@@ -1139,200 +1612,279 @@ const ModalUI = {
   categorySection.appendChild(linksList);
   container.appendChild(categorySection);
 },
+
+/**
+ * Load a specific section of the modal
+ * @param {string} section - Section name to load
+ * @param {boolean} forceRefresh - Whether to force refreshing data
+ */
+_loadSection: function(section, forceRefresh = false) {
+  // Update current section
+  this.currentSection = section;
   
-  /**
-   * Get an appropriate icon for a link category
-   * @param {string} category - Category name
-   * @returns {HTMLElement} - SVG icon element
-   */
-  getCategoryIcon: function(category) {
-    const iconWrapper = document.createElement('div');
-    
-    // Choose icon based on category
-    let iconSvg = '';
-    
-    switch (category) {
-      case 'socialLinks':
-        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.917 3.917 0 0 0-1.417.923A3.927 3.927 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.916 3.916 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.926 3.926 0 0 0-.923-1.417A3.911 3.911 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0h.003zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.92.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.47 2.47 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.478 2.478 0 0 1-.92-.598 2.48 2.48 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233 0-2.136.008-2.388.046-3.231.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045v.002zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92zm-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217zm0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334z"/>
-        </svg>`;
-        break;
-      case 'navigationLinks':
-        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M9.5 12.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
-          <path d="M1 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V2zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V2zM1 7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V7zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V7zM1 12a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-2zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-2zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2z"/>
-        </svg>`;
-        break;
-      case 'externalLinks':
-        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
-          <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
-        </svg>`;
-        break;
-      case 'internalLinks':
-        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.002 1.002 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z"/>
-          <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243L6.586 4.672z"/>
-        </svg>`;
-        break;
-      case 'documentLinks':
-        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
-          <path d="M4.603 14.087a.81.81 0 0 1-.438-.42c-.195-.388-.13-.776.08-1.102.198-.307.526-.568.897-.787a7.68 7.68 0 0 1 1.482-.645 19.697 19.697 0 0 0 1.062-2.227 7.269 7.269 0 0 1-.43-1.295c-.086-.4-.119-.796-.046-1.136.075-.354.274-.672.65-.823.192-.077.4-.12.602-.077a.7.7 0 0 1 .477.365c.088.164.12.356.127.538.007.188-.012.396-.047.614-.084.51-.27 1.134-.52 1.794a10.954 10.954 0 0 0 .98 1.686 5.753 5.753 0 0 1 1.334.05c.364.066.734.195.96.465.12.144.193.32.2.518.007.192-.047.382-.138.563a1.04 1.04 0 0 1-.354.416.856.856 0 0 1-.51.138c-.331-.014-.654-.196-.933-.417a5.712 5.712 0 0 1-.911-.95 11.651 11.651 0 0 0-1.997.406 11.307 11.307 0 0 1-1.02 1.51c-.292.35-.609.656-.927.787a.793.793 0 0 1-.58.029zm1.379-1.901c-.166.076-.32.156-.459.238-.328.194-.541.383-.647.547-.094.145-.096.25-.04.361.01.022.02.036.026.044a.266.266 0 0 0 .035-.012c.137-.056.355-.235.635-.572a8.18 8.18 0 0 0 .45-.606zm1.64-1.33a12.71 12.71 0 0 1 1.01-.193 11.744 11.744 0 0 1-.51-.858 20.801 20.801 0 0 1-.5 1.05zm2.446.45c.15.163.296.3.435.41.24.19.407.253.498.256a.107.107 0 0 0 .07-.015.307.307 0 0 0 .094-.125.436.436 0 0 0 .059-.2.095.095 0 0 0-.026-.063c-.052-.062-.2-.152-.518-.209a3.876 3.876 0 0 0-.612-.053zM8.078 7.8a6.7 6.7 0 0 0 .2-.828c.031-.188.043-.343.038-.465a.613.613 0 0 0-.032-.198.517.517 0 0 0-.145.04c-.087.035-.158.106-.196.283-.04.192-.03.469.046.822.024.111.054.227.09.346z"/>
-        </svg>`;
-        break;
-      case 'emailLinks':
-        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z"/>
-        </svg>`;
-        break;
-      case 'mediaLinks':
-        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M.002 3a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-12a2 2 0 0 1-2-2V3zm1 9v1a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12zm5-6.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0z"/>
-        </svg>`;
-        break;
-      default:
-        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M6.354 5.5H4a3 3 0 0 0 0 6h3a3 3 0 0 0 2.83-4H9c-.086 0-.17.01-.25.031A2 2 0 0 1 7 10.5H4a2 2 0 1 1 0-4h1.535c.218-.376.495-.714.82-1z"/>
-          <path d="M9 5.5a3 3 0 0 0-2.83 4h1.098A2 2 0 0 1 9 6.5h3a2 2 0 1 1 0 4h-1.535a4.02 4.02 0 0 1-.82 1H12a3 3 0 1 0 0-6H9z"/>
-        </svg>`;
-    }
-    
-    iconWrapper.innerHTML = iconSvg;
-    return iconWrapper;
-  },
+  // Update navigation UI
+  this._updateSidebarNavigation(section);
   
-  /**
-   * Filter links to show only the selected category
-   * @param {string} category - Category to show
-   * @private
-   */
-  _showCategoryLinks: function(category) {
-    console.log('Filtering links by category:', category);
-    const categories = document.querySelectorAll('.niblie-link-category');
-    console.log('Found categories:', categories.length);
-    
-    // Remove any existing "no links in category" messages
-    const existingNoLinksMsg = document.querySelector('.niblie-no-category-links');
-    if (existingNoLinksMsg) {
-      existingNoLinksMsg.remove();
-    }
-    
-    if (category === 'all') {
-      // Show all categories
-      let hasVisibleCategory = false;
-      
-      categories.forEach(cat => {
-        cat.style.display = '';
-        console.log('Showing category:', cat.dataset.category);
-        hasVisibleCategory = true;
-      });
-      
-      // If no categories with links, show message
-      if (!hasVisibleCategory) {
-        this._showNoCategoryLinksMessage('No links found on this page.');
-      }
-      
-      return;
-    }
-    
-    // Check if the selected category exists and has links
-    let categoryFound = false;
-    
-    // Show only selected category, hide others
-    categories.forEach(cat => {
-      // Use data attribute instead of text manipulation
-      const categoryName = cat.dataset.category;
-      console.log('Checking category:', categoryName, 'against', category);
-      
-      if (categoryName === category) {
-        cat.style.display = '';
-        categoryFound = true;
-        console.log('Showing category:', categoryName);
-      } else {
-        cat.style.display = 'none';
-        console.log('Hiding category:', categoryName);
-      }
-    });
-    
-    // If category doesn't exist or has no links, show message
-    if (!categoryFound) {
-      // Check if we know this category exists but has no links
-      if (this.categoriesWithLinks && this.categoriesWithLinks.hasOwnProperty(category) && !this.categoriesWithLinks[category]) {
-        this._showNoCategoryLinksMessage(`No links found in the ${this._formatCategoryName(category)} category.`);
-      } else if (category !== 'all') {
-        this._showNoCategoryLinksMessage(`No links found in the ${this._formatCategoryName(category)} category.`);
-      }
-    }
-  },
+  // Load appropriate section content
+  switch(section) {
+    case 'links':
+      this.loadLinksSection(forceRefresh);
+      break;
+    case 'images':
+      this.loadImagesSection(forceRefresh);
+      break;
+    case 'videos':
+      this.loadVideosSection(forceRefresh);
+      break;
+    case 'tables':
+      this.loadTablesSection(forceRefresh);
+      break;
+    default:
+      console.warn(`Unknown section: ${section}`);
+      this.loadLinksSection(forceRefresh);
+  }
+},
+
+/**
+ * Updates the sidebar navigation to highlight the active section
+ * @param {string} activeSection - The section to mark as active
+ */
+_updateSidebarNavigation: function(activeSection) {
+  if (!this.modal) return;
   
-  /**
-   * Shows a message when a category has no links
-   * @param {string} message - Message to display
-   * @private
-   */
-  _showNoCategoryLinksMessage: function(message) {
-    const linksContent = document.getElementById('niblie-links-content');
-    const noLinks = document.createElement('div');
-    noLinks.className = 'niblie-no-category-links';
-    noLinks.textContent = message;
-    noLinks.style.cssText = `
-      padding: 40px 0;
+  // Get all nav items
+  const navItems = this.modal.querySelectorAll('.niblie-nav-item');
+  
+  // Update styles for each item
+  navItems.forEach(item => {
+    const isActive = item.dataset.section === activeSection;
+    
+    item.className = isActive ? 'niblie-nav-item niblie-nav-active' : 'niblie-nav-item';
+    item.style.color = isActive ? '#1a73e8' : '#5f6368';
+    item.style.fontWeight = isActive ? '500' : '400';
+    item.style.backgroundColor = isActive ? 'rgba(26, 115, 232, 0.1)' : 'transparent';
+    item.style.borderLeft = isActive ? '4px solid #1a73e8' : '4px solid transparent';
+  });
+},
+
+/**
+ * Shows or hides link categories based on tab selection
+ * @param {string} category - Selected category, or 'all' for all categories
+ */
+_showCategoryLinks: function(category) {
+  const content = document.getElementById('niblie-links-content');
+  if (!content) return;
+  
+  const categories = content.querySelectorAll('.niblie-link-category');
+  
+  // Show/hide categories based on selection
+  categories.forEach(cat => {
+    if (category === 'all' || cat.dataset.category === category) {
+      cat.style.display = 'block';
+    } else {
+      cat.style.display = 'none';
+    }
+  });
+  
+  // If no links are shown, display a message
+  let visibleCount = 0;
+  categories.forEach(cat => {
+    if (cat.style.display !== 'none') {
+      visibleCount++;
+    }
+  });
+  
+  // Remove existing message if it exists
+  const existingMsg = content.querySelector('.niblie-no-category-links');
+  if (existingMsg) {
+    existingMsg.remove();
+  }
+  
+  // Add message if no links in this category
+  if (visibleCount === 0) {
+    const noCategoryLinks = document.createElement('div');
+    noCategoryLinks.className = 'niblie-no-category-links';
+    noCategoryLinks.textContent = 'No links found in this category.';
+    noCategoryLinks.style.cssText = `
+      padding: 20px;
       text-align: center;
       color: #5f6368;
       font-style: italic;
     `;
-    linksContent.appendChild(noLinks);
-  },
+    content.appendChild(noCategoryLinks);
+  }
+},
+
+/**
+ * Shows an error message in the content area
+ * @param {HTMLElement} container - The container to show the message in
+ * @param {string} message - The error message to display
+ */
+_showErrorMessage: function(container, message) {
+  // Clear existing content
+  container.innerHTML = '';
   
-  /**
-   * Format category name for display
-   * @param {string} category - Category name
-   * @returns {string} Formatted category name
-   * @private
-   */
-  _formatCategoryName: function(category) {
-    // Remove "Links" suffix if present
-    let name = category.replace(/Links$/, '');
-    
-    // Convert camelCase to space-separated words
-    name = name.charAt(0).toUpperCase() + 
-           name.slice(1).replace(/([A-Z])/g, ' $1');
-    
-    return name;
-  },
+  const errorMsg = document.createElement('div');
+  errorMsg.className = 'niblie-error';
+  errorMsg.textContent = message;
+  errorMsg.style.cssText = `
+    padding: 40px 0;
+    text-align: center;
+    color: #d93025;
+  `;
+  container.appendChild(errorMsg);
+},
+
+/**
+ * Gets the appropriate icon element for a given category
+ * @param {string} category - The category to get the icon for
+ * @returns {HTMLElement} The icon element
+ */
+getCategoryIcon: function(category) {
+  // Default icon (link)
+  const icon = document.createElement('span');
+  icon.className = 'niblie-category-icon';
+  icon.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+      <path d="M8.354 1.146a.5.5 0 0 1 .293.5V4.5h2.5a.5.5 0 0 1 0 1H8.646a.5.5 0 0 1-.354-.854L9.793 2.5H8.5a.5.5 0 0 1-.354-.854l.208-.208a.5.5 0 0 1 .354-.146zM4.5 8a.5.5 0 0 1 .5-.5h2.5V5.5a.5.5 0 0 1 1 0v2.5h2.5a.5.5 0 0 1 0 1H8.5v2.5a.5.5 0 0 1-1 0V8.5H5a.5.5 0 0 1-.5-.5z"/>
+    </svg>
+  `;
   
-  /**
-   * Helper function to update sidebar navigation state
-   * @param {string} activeSection - The currently active section
-   * @private
-   */
-  _updateSidebarNavigation: function(activeSection) {
-    // Find all navigation items
-    const navItems = document.querySelectorAll('.niblie-nav-item');
+  // Customize icons for specific categories
+  switch(category) {
+    case 'socialLinks':
+      icon.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 0a8 8 0 1 0 8 8A8.009 8.009 0 0 0 8 0zm3.646 11.354a.5.5 0 0 1-.708 0L8 9.207l-2.938 2.147a.5.5 0 0 1-.708-.708l3.646-3.646a.5.5 0 0 1 .708 0l3.646 3.646a.5.5 0 0 1 0 .708z"/>
+        </svg>
+      `;
+      break;
+    case 'externalLinks':
+      icon.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+        </svg>
+      `;
+      break;
+    case 'internalLinks':
+      icon.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8.354 1.146a.5.5 0 0 1 .293.5V4.5h2.5a.5.5 0 0 1 0 1H8.646a.5.5 0 0 1-.354-.854L9.793 2.5H8.5a.5.5 0 0 1-.354-.854l.208-.208a.5.5 0 0 1 .354-.146zM4.5 8a.5.5 0 0 1 .5-.5h2.5V5.5a.5.5 0 0 1 1 0v2.5h2.5a.5.5 0 0 1 0 1H8.5v2.5a.5.5 0 0 1-1 0V8.5H5a.5.5 0 0 1-.5-.5z"/>
+        </svg>
+      `;
+      break;
+    case 'documentLinks':
+      icon.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 0a8 8 0 1 0 8 8A8.009 8.009 0 0 0 8 0zm3.646 11.354a.5.5 0 0 1-.708 0L8 9.207l-2.938 2.147a.5.5 0 0 1-.708-.708L7.293 8 5.146 5.854a.5.5 0 0 1 .708-.708L8 7.293l2.646-2.147a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1 0 .708z"/>
+        </svg>
+      `;
+      break;
+    case 'mediaLinks':
+      icon.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 0a8 8 0 1 0 8 8A8.009 8.009 0 0 0 8 0zm3.646 11.354a.5.5 0 0 1-.708 0L8 9.207l-2.938 2.147a.5.5 0 0 1-.708-.708L7.293 8 5.146 5.854a.5.5 0 0 1 .708-.708L8 7.293l2.646-2.147a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1 0 .708z"/>
+        </svg>
+      `;
+      break;
+    case 'emailLinks':
+      icon.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 0a8 8 0 1 0 8 8A8.009 8.009 0 0 0 8 0zm3.646 11.354a.5.5 0 0 1-.708 0L8 9.207l-2.938 2.147a.5.5 0 0 1-.708-.708L7.293 8 5.146 5.854a.5.5 0 0 1 .708-.708L8 7.293l2.646-2.147a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1 0 .708z"/>
+        </svg>
+      `;
+      break;
+    case 'navigationLinks':
+      icon.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 0a8 8 0 1 0 8 8A8.009 8.009 0 0 0 8 0zm3.646 11.354a.5.5 0 0 1-.708 0L8 9.207l-2.938 2.147a.5.5 0 0 1-.708-.708L7.293 8 5.146 5.854a.5.5 0 0 1 .708-.708L8 7.293l2.646-2.147a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1 0 .708z"/>
+        </svg>
+      `;
+      break;
+  }
+  
+  return icon;
+},
+
+/**
+ * Initializes the modal UI component
+ */
+init: function() {
+  // Create modal element
+  this.createModal();
+  
+  // Close modal on ESC key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && this.isOpen) {
+      this.closeModal();
+    }
+  });
+  
+  // Prevent background scroll when modal is open
+  const preventScroll = (e) => {
+    if (this.isOpen) {
+      e.preventDefault();
+    }
+  };
+  
+  document.addEventListener('wheel', preventScroll, { passive: false });
+  document.addEventListener('touchmove', preventScroll, { passive: false });
+},
+
+/**
+ * Destroys the modal UI component
+ */
+destroy: function() {
+  if (!this.modal) return;
+  
+  // Remove event listeners
+  document.removeEventListener('keydown', this._handleKeyDown);
+  document.removeEventListener('wheel', this._preventScroll, { passive: false });
+  document.removeEventListener('touchmove', this._preventScroll, { passive: false });
+  
+  // Remove modal from DOM
+  this.modal.remove();
+  this.modal = null;
+},
+
+/**
+ * Handles key down events for the modal
+ * @param {KeyboardEvent} e - The keyboard event
+ */
+_handleKeyDown: function(e) {
+  // Close modal on ESC key
+  if (e.key === 'Escape' && ModalUI.isOpen) {
+    ModalUI.closeModal();
+  }
+},
+
+/**
+ * Prevents background scrolling but allows scrolling within the modal
+ * @param {Event} e - The event object
+ */
+_preventScroll: function(e) {
+  if (this.isOpen) {
+    // Find if the scroll event originated from within the modal content
+    const modalContent = document.querySelector('.niblie-main-content');
+    let targetElement = e.target;
     
-    // Update active state for each item
-    navItems.forEach(item => {
-      const section = item.dataset.section;
-      
-      // Reset styles
-      item.className = 'niblie-nav-item';
-      item.style.color = '#5f6368';
-      item.style.fontWeight = '400';
-      item.style.backgroundColor = '';
-      item.style.borderLeftColor = 'transparent';
-      
-      // Set active styles
-      if (section === activeSection) {
-        item.className = 'niblie-nav-item niblie-nav-active';
-        item.style.color = '#1a73e8';
-        item.style.fontWeight = '500';
-        item.style.backgroundColor = 'rgba(26, 115, 232, 0.1)';
-        item.style.borderLeftColor = '#1a73e8';
+    // Check if the event target is within the modal content area
+    let isWithinModalContent = false;
+    while (targetElement) {
+      if (targetElement === modalContent) {
+        isWithinModalContent = true;
+        break;
       }
-    });
+      targetElement = targetElement.parentElement;
+    }
     
-    // Update current section
-    this.currentSection = activeSection;
-  },
+    // Only prevent scrolling if not within modal content
+    if (!isWithinModalContent) {
+      e.preventDefault();
+    }
+  }
+},
 };
+
+// Initialize the ModalUI component
+ModalUI.init();

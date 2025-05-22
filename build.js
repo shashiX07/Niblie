@@ -32,6 +32,11 @@
     return;
   }
   
+  if (typeof TableFinder === 'undefined') {
+    console.error('TableFinder module not found');
+    return;
+  }
+  
   if (typeof ModalUI === 'undefined') {
     console.error('ModalUI module not found');
     return;

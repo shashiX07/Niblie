@@ -290,3 +290,13 @@ const LinkFinder = {
     if (window.gc) window.gc();
   }
 };
+
+// Make sure LinkFinder is globally available
+window.LinkFinder = LinkFinder;
+
+// Add to module registry
+if (window.ExtModules) {
+  window.ExtModules.LinkFinder = LinkFinder;
+}
+
+console.log('LinkFinder module registered');

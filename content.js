@@ -141,3 +141,17 @@ if (document.readyState !== 'loading') {
   console.log('Document already loaded - initializing word counter');
   initWordCounter();
 }
+
+// Ensure modules are registered after page load
+window.addEventListener('load', function() {
+  console.log('Checking for module registration on page load');
+  
+  if (typeof TableFinder === 'undefined' || typeof TableUI === 'undefined') {
+    console.warn('Table modules not found, attempting to re-register');
+    
+    // Check if the registration function exists in the global scope
+    if (typeof registerModules === 'function') {
+      registerModules();
+    }
+  }
+});

@@ -295,27 +295,58 @@ const VideoFinder = {
   _isElementVisible: function(element) {
     if (!element) return false;
     
-    // Check style properties that might hide the element
-    const style = window.getComputedStyle(element);
-    
-    if (style.display === 'none' || 
-        style.visibility === 'hidden' || 
-        style.opacity === '0' ||
-        element.offsetWidth === 0 || 
-        element.offsetHeight === 0) {
+    try {
+      // Check if we should ignore viewport constraints
+      if (this.scanEntirePage) {
+        // When scanning the entire page, only check if the element is present in DOM
+        // and has non-zero dimensions
+        const style = window.getComputedStyle(element);
+        
+        // Skip hidden elements regardless
+        if (style.display === 'none' || 
+            style.visibility === 'hidden' || 
+            style.opacity === '0') {
+          return false;
+        }
+        
+        // Return true if the element exists and isn't explicitly hidden
+        return true;
+      }
+      
+      // Standard viewport-based visibility check
+      const style = window.getComputedStyle(element);
+      
+      if (style.display === 'none' || 
+          style.visibility === 'hidden' || 
+          style.opacity === '0') {
+        return false;
+      }
+      
+      // Check if element is in viewport or near it
+      const rect = element.getBoundingClientRect();
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+      
+      // Consider elements that might be just outside the viewport
+      const extendedViewport = {
+        top: -viewportHeight,
+        left: -viewportWidth,
+        bottom: viewportHeight * 2,
+        right: viewportWidth * 2
+      };
+      
+      return (
+        rect.width > 0 &&
+        rect.height > 0 &&
+        rect.bottom >= extendedViewport.top &&
+        rect.right >= extendedViewport.left &&
+        rect.top <= extendedViewport.bottom &&
+        rect.left <= extendedViewport.right
+      );
+    } catch (error) {
+      console.warn('Error checking element visibility:', error);
       return false;
     }
-    
-    // Check if element is in viewport
-    const rect = element.getBoundingClientRect();
-    return (
-      rect.width > 0 &&
-      rect.height > 0 &&
-      rect.bottom >= 0 &&
-      rect.right >= 0 &&
-      rect.top <= (window.innerHeight || document.documentElement.clientHeight) &&
-      rect.left <= (window.innerWidth || document.documentElement.clientWidth)
-    );
   },
   
   /**
