@@ -723,6 +723,7 @@ const TableUI = {
       border: 1px solid #e4e8ed;
       margin-bottom: 20px;
       overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     `;
     
     // Table header section with title
@@ -823,10 +824,258 @@ const TableUI = {
     `;
     
     titleContainer.appendChild(tableInfo);
-    header.appendChild(titleContainer);
     
-    // Rest of the existing code for the table card
-    // ... (keep the existing export and view functionality)
+    // Add action buttons
+    const actionButtons = document.createElement('div');
+    actionButtons.className = 'niblie-table-actions';
+    actionButtons.style.cssText = `
+      display: flex;
+      gap: 8px;
+    `;
+    
+    // View button
+    const viewButton = document.createElement('button');
+    viewButton.className = 'niblie-button niblie-view-button';
+    viewButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+        <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+      </svg>
+      <span>View</span>
+    `;
+    viewButton.style.cssText = `
+      background: #e8f0fe;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      color: #1a73e8;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    `;
+    viewButton.title = "View complete table";
+    
+    // Export dropdown button
+    const exportButton = document.createElement('button');
+    exportButton.className = 'niblie-button niblie-export-button';
+    exportButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+        <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+      </svg>
+      <span>Export</span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16" style="margin-left: 4px;">
+        <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+      </svg>
+    `;
+    exportButton.style.cssText = `
+      background: #f1f3f4;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      color: #5f6368;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+      position: relative;
+    `;
+    exportButton.title = "Export table data";
+    
+    // Export dropdown menu
+    const dropdownMenu = document.createElement('div');
+    dropdownMenu.className = 'niblie-export-dropdown';
+    dropdownMenu.style.cssText = `
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 5px;
+      background: white;
+      border: 1px solid #e4e8ed;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: none;
+      z-index: 1000;
+      min-width: 120px;
+    `;
+    
+    // Export format options
+    const exportFormats = [
+      { format: 'csv', label: 'CSV' },
+      { format: 'excel', label: 'Excel' },
+      { format: 'json', label: 'JSON' }
+    ];
+    
+    exportFormats.forEach(format => {
+      const option = document.createElement('div');
+      option.className = 'niblie-export-option';
+      option.textContent = format.label;
+      option.style.cssText = `
+        padding: 8px 15px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      `;
+      
+      option.addEventListener('mouseenter', () => {
+        option.style.backgroundColor = '#f8f9fa';
+      });
+      
+      option.addEventListener('mouseleave', () => {
+        option.style.backgroundColor = '';
+      });
+      
+      option.addEventListener('click', e => {
+        e.stopPropagation();
+        this._exportTable(table, format.format);
+        dropdownMenu.style.display = 'none';
+      });
+      
+      dropdownMenu.appendChild(option);
+    });
+    
+    exportButton.appendChild(dropdownMenu);
+    
+    // Toggle dropdown on click
+    exportButton.addEventListener('click', () => {
+      dropdownMenu.style.display = dropdownMenu.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', e => {
+      if (!exportButton.contains(e.target)) {
+        dropdownMenu.style.display = 'none';
+      }
+    });
+    
+    // Button hover effects
+    [viewButton, exportButton].forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        btn.style.backgroundColor = btn === viewButton ? '#d4e6fc' : '#e8eaed';
+      });
+      
+      btn.addEventListener('mouseleave', () => {
+        btn.style.backgroundColor = btn === viewButton ? '#e8f0fe' : '#f1f3f4';
+      });
+    });
+    
+    // Add event to view button
+    viewButton.addEventListener('click', () => {
+      this._showTablePreview(table);
+    });
+    
+    actionButtons.appendChild(viewButton);
+    actionButtons.appendChild(exportButton);
+    header.appendChild(titleContainer);
+    header.appendChild(actionButtons);
+    
+    // Add table preview section with limited rows
+    const previewSection = document.createElement('div');
+    previewSection.className = 'niblie-table-preview';
+    previewSection.style.cssText = `
+      padding: 15px;
+      overflow-x: auto;
+      max-height: 200px;
+    `;
+    
+    // Create table preview
+    const previewTable = document.createElement('table');
+    previewTable.className = 'niblie-preview-table';
+    previewTable.style.cssText = `
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    `;
+    
+    // Add table headers
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    headerRow.style.cssText = `
+      background-color: #f8f9fa;
+    `;
+    
+    table.headers.forEach(header => {
+      const th = document.createElement('th');
+      th.textContent = header;
+      th.style.cssText = `
+        padding: 8px;
+        text-align: left;
+        border: 1px solid #e4e8ed;
+        font-weight: 500;
+      `;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    previewTable.appendChild(thead);
+    
+    // Add table rows (limited to first 5 for preview)
+    const tbody = document.createElement('tbody');
+    const maxRows = Math.min(5, table.rows.length);
+    
+    for (let i = 0; i < maxRows; i++) {
+      const tr = document.createElement('tr');
+      tr.style.cssText = i % 2 === 0 ? '' : 'background-color: #f8f9fa;';
+      
+      table.rows[i].forEach(cell => {
+        const td = document.createElement('td');
+        td.textContent = cell;
+        td.style.cssText = `
+          padding: 8px;
+          border: 1px solid #e4e8ed;
+        `;
+        tr.appendChild(td);
+      });
+      
+      tbody.appendChild(tr);
+    }
+    
+    previewTable.appendChild(tbody);
+    previewSection.appendChild(previewTable);
+    
+    // Add "show more" overlay if there are more than 5 rows
+    if (table.rows.length > 5) {
+      const showMoreOverlay = document.createElement('div');
+      showMoreOverlay.className = 'niblie-show-more-overlay';
+      showMoreOverlay.style.cssText = `
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 80px;
+        background: linear-gradient(transparent, white);
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        padding-bottom: 15px;
+      `;
+      
+      const showMoreButton = document.createElement('button');
+      showMoreButton.className = 'niblie-show-more-button';
+      showMoreButton.textContent = `Show all ${table.rows.length} rows`;
+      showMoreButton.style.cssText = `
+        background: #f1f3f4;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 15px;
+        color: #1a73e8;
+        cursor: pointer;
+        font-size: 13px;
+      `;
+      
+      showMoreButton.addEventListener('click', () => {
+        this._showTablePreview(table);
+      });
+      
+      showMoreOverlay.appendChild(showMoreButton);
+      previewSection.appendChild(showMoreOverlay);
+    }
+    
+    card.appendChild(header);
+    card.appendChild(previewSection);
     
     return card;
   },

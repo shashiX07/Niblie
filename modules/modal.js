@@ -230,19 +230,11 @@ const ModalUI = {
     this.inTransition = true;
     const modal = this.createModal();
     
-    // Add proper event listeners for scroll handling
-    document.addEventListener('wheel', this._preventScroll.bind(this), { passive: false });
-    document.addEventListener('touchmove', this._preventScroll.bind(this), { passive: false });
+    // Add scrolling styles first
+    this._addScrollingStyles();
     
-    // Prevent background scrolling only
+    // Only prevent scrolling on the body, not inside the modal
     document.body.style.overflow = 'hidden';
-    
-    // Ensure main content is scrollable
-    const mainContent = modal.querySelector('.niblie-main-content');
-    if (mainContent) {
-      mainContent.style.overflow = 'auto';
-      mainContent.style.maxHeight = 'calc(80vh - 40px)'; // Ensure there's a max height
-    }
     
     // Show the modal with animation
     modal.style.visibility = 'visible';
@@ -255,10 +247,16 @@ const ModalUI = {
       // Initialize the current section
       this._loadSection(this.currentSection);
       
+      // Apply scroll behavior fix
+      this.fixScrollBehavior();
+      
       // Set open state after animation completes
       setTimeout(() => {
         this.isOpen = true;
         this.inTransition = false;
+        
+        // Apply the fix again to make sure it works after DOM updates
+        this.fixScrollBehavior();
       }, 300);
     }, 10);
   },
@@ -274,15 +272,11 @@ const ModalUI = {
     const modal = this.modal;
     const modalContent = modal.querySelector('.niblie-modal-content');
     
-    // Remove scroll event listeners
-    document.removeEventListener('wheel', this._preventScroll, { passive: false });
-    document.removeEventListener('touchmove', this._preventScroll, { passive: false });
-    
     // Animate closing
     modalContent.style.transform = 'translateY(-20px)';
     modal.style.opacity = '0';
     
-    // Re-enable scrolling
+    // Re-enable scrolling on the body
     document.body.style.overflow = '';
     
     // Remove after animation completes
@@ -290,21 +284,10 @@ const ModalUI = {
       modal.style.visibility = 'hidden';
       
       // Clear caches to free memory when modal is closed
-      if (window.LinkFinder) {
-        LinkFinder.clearCache();
-      }
-      
-      if (window.ImageFinder) {
-        ImageFinder.clearCache();
-      }
-      
-      if (window.VideoFinder) {
-        VideoFinder.clearCache();
-      }
-      
-      if (window.TableFinder) {
-        TableFinder.clearCache();
-      }
+      if (window.LinkFinder) LinkFinder.clearCache();
+      if (window.ImageFinder) ImageFinder.clearCache();
+      if (window.VideoFinder) VideoFinder.clearCache();
+      if (window.TableFinder) TableFinder.clearCache();
       
       // Reset state
       this.isOpen = false;
@@ -1327,7 +1310,6 @@ const ModalUI = {
       }
     });
     
-    // Add the button to actionButtons, just after refreshButton
     actionButtons.appendChild(refreshButton);
     actionButtons.appendChild(scanAllButton);
     actionButtons.appendChild(settingsButton);
@@ -1586,8 +1568,8 @@ const ModalUI = {
           copyButton.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
               <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-              <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5  0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
-            </svg>
+              <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+      </svg>
           `;
           copyButton.style.color = '#5f6368';
         }, 2000);
@@ -1819,16 +1801,6 @@ init: function() {
       this.closeModal();
     }
   });
-  
-  // Prevent background scroll when modal is open
-  const preventScroll = (e) => {
-    if (this.isOpen) {
-      e.preventDefault();
-    }
-  };
-  
-  document.addEventListener('wheel', preventScroll, { passive: false });
-  document.addEventListener('touchmove', preventScroll, { passive: false });
 },
 
 /**
@@ -1863,27 +1835,136 @@ _handleKeyDown: function(e) {
  * @param {Event} e - The event object
  */
 _preventScroll: function(e) {
-  if (this.isOpen) {
-    // Find if the scroll event originated from within the modal content
-    const modalContent = document.querySelector('.niblie-main-content');
-    let targetElement = e.target;
-    
-    // Check if the event target is within the modal content area
-    let isWithinModalContent = false;
-    while (targetElement) {
-      if (targetElement === modalContent) {
-        isWithinModalContent = true;
-        break;
-      }
-      targetElement = targetElement.parentElement;
+  if (!this.isOpen) return;
+  
+  // Find if the scroll event originated from within modal content
+  const modalContent = document.querySelector('.niblie-main-content');
+  if (!modalContent) return;
+  
+  let target = e.target;
+  let isWithinModalContent = false;
+  
+  // Check if scroll event is within modal content area
+  while (target) {
+    if (target === modalContent) {
+      isWithinModalContent = true;
+      break;
     }
-    
-    // Only prevent scrolling if not within modal content
-    if (!isWithinModalContent) {
-      e.preventDefault();
-    }
+    target = target.parentElement;
+  }
+  
+  // Only prevent default if not within modal content
+  if (!isWithinModalContent) {
+    e.preventDefault();
   }
 },
+
+/**
+ * Helper method to ensure scrolling works correctly in all cases
+ */
+_ensureScrollingWorks: function() {
+  // Fix main content scrolling
+  const mainContent = document.querySelector('.niblie-main-content');
+  if (mainContent) {
+    mainContent.style.overflow = 'auto';
+    mainContent.style.overflowX = 'hidden';
+    mainContent.style.overflowY = 'auto';
+    mainContent.style.maxHeight = 'calc(80vh - 60px)';
+  }
+  
+  // Fix table preview scrolling
+  const tablePreviewElements = document.querySelectorAll('.niblie-table-preview');
+  tablePreviewElements.forEach(preview => {
+    preview.style.position = 'relative'; // For absolute positioning of overlay
+    preview.style.overflowX = 'auto';
+    preview.style.maxHeight = '200px';
+  });
+},
+
+/**
+ * Adds a global style to enforce scrolling in the modal content
+ * This is the most reliable way to ensure scrolling works
+ */
+_addScrollingStyles: function() {
+  // Check if we already added the style
+  if (document.getElementById('niblie-scroll-styles')) return;
+  
+  // Create a style element
+  const style = document.createElement('style');
+  style.id = 'niblie-scroll-styles';
+  
+  // Add styles that force scrolling to work in the modal
+  style.textContent = `
+    .niblie-main-content {
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      max-height: calc(80vh - 60px) !important;
+      -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .niblie-table-preview {
+      overflow-x: auto !important;
+      max-height: 200px !important;
+      position: relative !important;
+    }
+    
+    .niblie-modal-content {
+      overflow: hidden !important;
+    }
+  `;
+  
+  // Add the style to the document head
+  document.head.appendChild(style);
+  console.log('Added scroll styles to document');
+},
+
+/**
+ * Fixes scrolling inside the modal
+ */
+fixScrollBehavior: function() {
+  console.log('Applying scroll behavior fix');
+  
+  // 1. Remove any existing wheel/touch event listeners that might interfere
+  if (this._boundPreventScroll) {
+    document.removeEventListener('wheel', this._boundPreventScroll, { passive: false });
+    document.removeEventListener('touchmove', this._boundPreventScroll, { passive: false });
+  }
+  
+  // 2. Set explicit CSS to force scrolling to work in the main content area
+  const mainContent = document.querySelector('.niblie-main-content');
+  if (mainContent) {
+    mainContent.style.cssText += `
+      overflow-y: scroll !important; 
+      overflow-x: hidden !important;
+      max-height: calc(80vh - 120px) !important;
+      -webkit-overflow-scrolling: touch !important;
+    `;
+    
+    // Make sure the content is actually scrollable by preventing event propagation
+    mainContent.addEventListener('wheel', function(e) {
+      e.stopPropagation();
+    }, { passive: true });
+  }
+  
+  // 3. Inject a style tag with !important rules to override any conflicting styles
+  if (!document.getElementById('niblie-scroll-fix')) {
+    const style = document.createElement('style');
+    style.id = 'niblie-scroll-fix';
+    style.innerHTML = `
+      .niblie-main-content {
+        overflow-y: scroll !important;
+        overflow-x: hidden !important;
+        max-height: calc(80vh - 120px) !important;
+      }
+      
+      .niblie-table-preview {
+        overflow: auto !important;
+        max-height: 200px !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
 };
 
 // Initialize the ModalUI component
