@@ -364,7 +364,7 @@ const ModalUI = {
 
     settingsButton.title = "Settings";
     settingsButton.addEventListener("click", () => {
-      const settingURL = "https://shashix.github.io/Niblie/";
+      const settingURL = "https://shashix07.github.io/Niblie/";
       window.location.href = settingURL;
     })
 

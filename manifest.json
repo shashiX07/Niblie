@@ -23,7 +23,7 @@
   "background": {
     "service_worker": "background.js"
   },
-  "options_page": "options.html",
+  "options_page": "index.html",
   "icons": {
     "48": "icon48.png"
   }
