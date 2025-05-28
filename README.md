@@ -78,7 +78,7 @@ niblie/
 ├── videoFinder.js         # Detects videos
 ├── tableFinder.js         # Highlights tables
 ├── modal.js               # Custom modal viewer
-├── options.html/css/js    # Settings UI
+├── index.html/css/js      # Settings UI
 └── assets/                # Icons, images, themes
 ```
 
