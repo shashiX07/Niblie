@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Viewport Word Counter",
-  "version": "1.0",
+  "version": "0.1.0",
   "description": "Counts words in the current viewport and displays in a draggable badge",
   "permissions": ["activeTab", "storage"],
   "content_scripts": [

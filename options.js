@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS = {
   useCuteTheme: false,
   cuteThemeStyle: 'kawaii',
   enableAnimations: false
+  
 };
 
 // DOM Elements
@@ -54,8 +55,11 @@ const updateBadgePreview = () => {
   const isShowingWordCount = showWordCount.checked;
   const opacity = badgeOpacityInput.value / 100;
   let bgColor;
+  
+  // Get the current color style tab
+  const colorTab = document.querySelector('.tab-btn.active').dataset.tab;
 
-  if (document.querySelector('.tab-btn[data-tab="solid"]').classList.contains('active')) {
+  if (colorTab === 'solid') {
     bgColor = badgeColorInput.value;
   } else {
     const start = gradientStartInput.value;
@@ -104,13 +108,13 @@ const updateBadgePreview = () => {
     } else {
       // Regular styling
       if (colorTab === 'solid') {
-        badgePreview.style.backgroundColor = badgeColorPicker.value;
+        badgePreview.style.backgroundColor = badgeColorInput.value;
       } else {
-        const angle = gradientAngleSlider.value;
-        badgePreview.style.background = `linear-gradient(${angle}deg, ${gradientStartPicker.value}, ${gradientEndPicker.value})`;
+        const angle = gradientAngleInput.value;
+        badgePreview.style.background = `linear-gradient(${angle}deg, ${gradientStartInput.value}, ${gradientEndInput.value})`;
       }
 
-      badgePreview.style.color = textColorPicker.value;
+      badgePreview.style.color = textColorInput.value;
       badgePreview.textContent = '123 words';
     }
   } else {
@@ -143,18 +147,18 @@ const updateBadgePreview = () => {
       badgePreview.style.padding = '0';
 
       if (colorTab === 'solid') {
-        badgePreview.style.backgroundColor = badgeColorPicker.value;
+        badgePreview.style.backgroundColor = badgeColorInput.value;
       } else {
-        const angle = gradientAngleSlider.value;
-        badgePreview.style.background = `linear-gradient(${angle}deg, ${gradientStartPicker.value}, ${gradientEndPicker.value})`;
+        const angle = gradientAngleInput.value;
+        badgePreview.style.background = `linear-gradient(${angle}deg, ${gradientStartInput.value}, ${gradientEndInput.value})`;
       }
 
-      badgePreview.style.color = textColorPicker.value;
+      badgePreview.style.color = textColorInput.value;
     }
   }
 
   // Apply opacity
-  badgePreview.style.opacity = opacitySlider.value / 100;
+  badgePreview.style.opacity = badgeOpacityInput.value / 100;
 };
 
 // Position button handling
