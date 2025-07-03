@@ -27,6 +27,24 @@ const updateWordCount = () => {
   });
 };
 
+// Initialize ad blockers
+const initAdBlockers = async () => {
+  if (!window.PlatformDetector) return;
+  
+  const currentPlatform = PlatformDetector.detectCurrentPlatform();
+  const isEnabled = await AdBlockerStorage.isEnabledForPlatform(currentPlatform);
+  
+  if (isEnabled) {
+    // Initialize appropriate blocker
+    BlockerUI.initializePlatformBlocker(currentPlatform);
+  } else if (PlatformDetector.platformHasAds(currentPlatform)) {
+    // Show enable modal after a short delay
+    setTimeout(() => {
+      BlockerUI.showEnableModal(currentPlatform);
+    }, 3000);
+  }
+};
+
 // Initialize the word counter
 const initWordCounter = () => {
   console.log('Initializing WordCounter');
@@ -34,11 +52,12 @@ const initWordCounter = () => {
   // Initialize BadgeUI with settings
   if (typeof BadgeUI !== 'undefined') {
     BadgeUI.init().then(() => {
-      // Initial count
-      performWordCount();
-      
-      // Set up event listeners based on settings
+      console.log('BadgeUI initialized');
+      updateWordCount();
       setupWordCountListeners();
+      
+      // Initialize ad blockers after badge is ready
+      initAdBlockers();
     });
   }
 };

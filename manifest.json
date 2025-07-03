@@ -9,13 +9,20 @@
       "matches": ["<all_urls>"],
       "js": [
         "modules/moduleLoader.js",
-        "modules/wordCounter.js", 
-        "modules/ui.js", 
-        "modules/linkFinder.js", 
+        "modules/wordCounter.js",
+        "modules/ui.js",
+        "modules/linkFinder.js",
         "modules/imageFinder.js",
         "modules/videoFinder.js",
         "modules/tableFinder.js",
-        "modules/modal.js", 
+        "modules/modal.js",
+        "modules/adBlocker/platformDetector.js",
+        "modules/adBlocker/storageManager.js",
+        "modules/adBlocker/youtubeBlocker.js",
+        "modules/adBlocker/spotifyBlocker.js",
+        "modules/adBlocker/hotstarBlocker.js",
+        "modules/adBlocker/webBlocker.js",
+        "modules/adBlocker/blockerUI.js",
         "content.js"
       ]
     }

@@ -174,11 +174,34 @@ const ModalUI = {
       e.preventDefault();
       this._loadSection('tables');
     });
+
+    // Add Ad Blockers section
+    const adBlockersItem = document.createElement('a');
+    adBlockersItem.className = 'niblie-nav-item';
+    adBlockersItem.textContent = 'Ad Blockers';
+    adBlockersItem.href = '#';
+    adBlockersItem.dataset.section = 'adblockers';
+    adBlockersItem.style.cssText = `
+      display: block;
+      padding: 12px 20px;
+      color: #5f6368;
+      text-decoration: none;
+      font-weight: 400;
+      margin-bottom: 5px;
+      border-left: 4px solid transparent;
+      transition: all 0.2s;
+    `;
+
+    adBlockersItem.addEventListener('click', (e) => {
+      e.preventDefault();
+      this._loadSection('adblockers');
+    });
     
     navItems.appendChild(linksItem);
     navItems.appendChild(imagesItem);
     navItems.appendChild(videosItem);
     navItems.appendChild(tablesItem);
+    navItems.appendChild(adBlockersItem);
     sidebar.appendChild(navItems);
     
     // Create main content area
@@ -196,7 +219,8 @@ const ModalUI = {
     style.textContent = `
       @keyframes niblie-spin {
         to { transform: rotate(360deg); }
-      }
+        }
+      };
     `;
     document.head.appendChild(style);
     
@@ -609,142 +633,18 @@ const ModalUI = {
           `;
           linksContent.appendChild(errorMsg);
         });
-    } else if (window.ExtModules && window.ExtModules.LinkFinder) {
-      console.log('Using LinkFinder from ExtModules');
-      window.ExtModules.LinkFinder.findLinks(forceRefresh)
-        .then(linkData => {
-          // Hide loading spinner
-          loadingSpinner.style.display = 'none';
-          
-          // Create link category sections
-          let hasLinks = false;
-          
-          // Track which categories have links for tab filtering
-          const categoriesWithLinks = {};
-          
-          Object.keys(linkData).forEach(category => {
-            const links = linkData[category];
-            categoriesWithLinks[category] = links.length > 0;
-            
-            if (links.length === 0) return;
-            
-            hasLinks = true;
-            
-            // Create category section
-            this.createLinkCategory(linksContent, category, links);
-          });
-          
-          // Store categories with links for tab filtering
-          this.categoriesWithLinks = categoriesWithLinks;
-          
-          // If no links were found
-          if (!hasLinks) {
-            const noLinks = document.createElement('div');
-            noLinks.className = 'niblie-no-links';
-            noLinks.textContent = 'No links found on this page.';
-            noLinks.style.cssText = `
-              padding: 40px 0;
-              text-align: center;
-              color: #5f6368;
-              font-style: italic;
-            `;
-            linksContent.appendChild(noLinks);
-          } else {
-            // Apply current tab filter
-            const activeTab = categoryTabs.querySelector('.niblie-tab.active');
-            if (activeTab) {
-              const selectedCategory = activeTab.dataset.category;
-              setTimeout(() => {
-                // Defer execution to ensure DOM is updated
-                this._showCategoryLinks(selectedCategory);
-              }, 0);
-            }
-          }
-        }).catch(error => {
-          console.error('Error analyzing links:', error);
-          loadingSpinner.style.display = 'none';
-          
-          // Show error message
-          const errorMsg = document.createElement('div');
-          errorMsg.className = 'niblie-error';
-          errorMsg.textContent = 'An error occurred while analyzing links.';
-          errorMsg.style.cssText = `
-            padding: 40px 0;
-            text-align: center;
-            color: #d93025;
-          `;
-          linksContent.appendChild(errorMsg);
-        });
     } else {
-      // Try to wait for it to load
-      if (window.ModuleLoader) {
-        window.ModuleLoader.waitForModule('LinkFinder', 5)
-          .then(linkFinder => {
-            console.log('LinkFinder loaded via ModuleLoader');
-            linkFinder.findLinks(forceRefresh)
-              .then(linkData => {
-                // Hide loading spinner
-                loadingSpinner.style.display = 'none';
-                
-                // Create link category sections
-                let hasLinks = false;
-                
-                // Track which categories have links for later use in tab filtering
-                const categoriesWithLinks = {};
-                
-                Object.keys(linkData).forEach(category => {
-                  const links = linkData[category];
-                  categoriesWithLinks[category] = links.length > 0;
-                  
-                  if (links.length === 0) return;
-                  
-                  hasLinks = true;
-                  
-                  // Create category section
-                  this.createLinkCategory(linksContent, category, links);
-                });
-                
-                // Store categories with links for tab filtering
-                this.categoriesWithLinks = categoriesWithLinks;
-                
-                // If no links were found
-                if (!hasLinks) {
-                  const noLinks = document.createElement('div');
-                  noLinks.className = 'niblie-no-links';
-                  noLinks.textContent = 'No links found on this page.';
-                  noLinks.style.cssText = `
-                    padding: 40px 0;
-                    text-align: center;
-                    color: #5f6368;
-                    font-style: italic;
-                  `;
-                  linksContent.appendChild(noLinks);
-                } else {
-                  // Apply current tab filter
-                  const activeTab = categoryTabs.querySelector('.niblie-tab.active');
-                  if (activeTab) {
-                    const selectedCategory = activeTab.dataset.category;
-                    setTimeout(() => {
-                      // Defer execution to ensure DOM is updated
-                      this._showCategoryLinks(selectedCategory);
-                    }, 0);
-                  }
-                }
-              }).catch(error => {
-                console.error('Error analyzing links:', error);
-                loadingSpinner.style.display = 'none';
-                showErrorMessage('An error occurred while analyzing links.');
-              });
-          })
-          .catch(error => {
-            console.error('Failed to load LinkFinder module:', error);
-            loadingSpinner.style.display = 'none';
-            showErrorMessage('Link finder module is not available.');
-          });
-      } else {
-        loadingSpinner.style.display = 'none';
-        showErrorMessage('Link finder module is not available.');
-      }
+      // Show error message
+      loadingSpinner.style.display = 'none';
+      const errorMsg = document.createElement('div');
+      errorMsg.className = 'niblie-error';
+      errorMsg.textContent = 'Link finder module is not available.';
+      errorMsg.style.cssText = `
+        padding: 40px 0;
+        text-align: center;
+        color: #d93025;
+      `;
+      linksContent.appendChild(errorMsg);
     }
   },
   
@@ -783,48 +683,6 @@ const ModalUI = {
       font-weight: 500;
     `;
     
-    const actionButtons = document.createElement('div');
-    actionButtons.className = 'niblie-actions';
-    
-    const refreshButton = document.createElement('button');
-    refreshButton.className = 'niblie-button niblie-refresh-button';
-    refreshButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-      </svg>
-    `;
-    refreshButton.style.cssText = `
-      background: none;
-      border: none;
-      color: #5f6368;
-      cursor: pointer;
-      padding: 8px;
-      margin-right: 8px;
-      border-radius: 4px;
-      transition: background-color 0.2s;
-    `;
-    refreshButton.title = "Refresh images";
-    
-    const settingsButton = document.createElement('button');
-    settingsButton.className = 'niblie-button niblie-settings-button';
-    settingsButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
-        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z"/>
-      </svg>
-    `;
-    settingsButton.style.cssText = `
-      background: none;
-      border: none;
-      color: #5f6368;
-      cursor: pointer;
-      padding: 8px;
-      margin-right: 8px;
-      border-radius: 4px;
-      transition: background-color 0.2s;
-    `;
-    
     const closeButton = document.createElement('button');
     closeButton.className = 'niblie-button niblie-close-button';
     closeButton.innerHTML = `
@@ -842,59 +700,22 @@ const ModalUI = {
       transition: background-color 0.2s;
     `;
     
-    // Events for buttons
-    closeButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.closeModal();
-    });
+    closeButton.addEventListener('click', () => this.closeModal());
     
-    refreshButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.loadImagesSection(true);
-    });
-    
-    settingsButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (typeof this._showSettingsView === 'function') {
-        this._showSettingsView();
-      }
-    });
-    
-    // Add hover effects
-    [closeButton, settingsButton, refreshButton].forEach(btn => {
-      btn.addEventListener('mouseenter', () => {
-        btn.style.backgroundColor = '#f1f3f4';
-        btn.style.color = '#202124';
-      });
-      btn.addEventListener('mouseleave', () => {
-        btn.style.backgroundColor = '';
-        btn.style.color = '#5f6368';
-      });
-    });
-    
-    actionButtons.appendChild(refreshButton);
-    actionButtons.appendChild(settingsButton);
-    actionButtons.appendChild(closeButton);
     contentHeader.appendChild(sectionTitle);
-    contentHeader.appendChild(actionButtons);
-    
-    // Add header to main content
+    contentHeader.appendChild(closeButton);
     mainContent.appendChild(contentHeader);
     
-    // Create and add images content
-    if (window.ImageUI) {
-      const imagesContent = ImageUI.createImagesContent(forceRefresh);
-      mainContent.appendChild(imagesContent);
-    } else {
-      const errorMsg = document.createElement('div');
-      errorMsg.textContent = 'Image finder module is not available.';
-      errorMsg.style.cssText = `
-        padding: 40px;
-        text-align: center;
-        color: #d93025;
-      `;
-      mainContent.appendChild(errorMsg);
-    }
+    // Add placeholder content
+    const placeholderContent = document.createElement('div');
+    placeholderContent.textContent = 'Images section - Implementation pending';
+    placeholderContent.style.cssText = `
+      padding: 40px;
+      text-align: center;
+      color: #5f6368;
+      font-style: italic;
+    `;
+    mainContent.appendChild(placeholderContent);
   },
   
   /**
@@ -932,48 +753,6 @@ const ModalUI = {
       font-weight: 500;
     `;
     
-    const actionButtons = document.createElement('div');
-    actionButtons.className = 'niblie-actions';
-    
-    const refreshButton = document.createElement('button');
-    refreshButton.className = 'niblie-button niblie-refresh-button';
-    refreshButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-      </svg>
-    `;
-    refreshButton.style.cssText = `
-      background: none;
-      border: none;
-      color: #5f6368;
-      cursor: pointer;
-      padding: 8px;
-      margin-right: 8px;
-      border-radius: 4px;
-      transition: background-color 0.2s;
-    `;
-    refreshButton.title = "Refresh videos";
-    
-    const settingsButton = document.createElement('button');
-    settingsButton.className = 'niblie-button niblie-settings-button';
-    settingsButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
-        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z"/>
-      </svg>
-    `;
-    settingsButton.style.cssText = `
-      background: none;
-      border: none;
-      color: #5f6368;
-      cursor: pointer;
-      padding: 8px;
-      margin-right: 8px;
-      border-radius: 4px;
-      transition: background-color 0.2s;
-    `;
-    
     const closeButton = document.createElement('button');
     closeButton.className = 'niblie-button niblie-close-button';
     closeButton.innerHTML = `
@@ -991,133 +770,22 @@ const ModalUI = {
       transition: background-color 0.2s;
     `;
     
-    // Events for buttons
-    closeButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.closeModal();
-    });
+    closeButton.addEventListener('click', () => this.closeModal());
     
-    refreshButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.loadVideosSection(true);
-    });
-    
-    settingsButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (typeof this._showSettingsView === 'function') {
-        this._showSettingsView();
-      }
-    });
-    
-    // Add hover effects
-    [closeButton, settingsButton, refreshButton].forEach(btn => {
-      btn.addEventListener('mouseenter', () => {
-        btn.style.backgroundColor = '#f1f3f4';
-        btn.style.color = '#202124';
-      });
-      btn.addEventListener('mouseleave', () => {
-        btn.style.backgroundColor = '';
-        btn.style.color = '#5f6368';
-      });
-    });
-    
-    actionButtons.appendChild(refreshButton);
-    
-    const scanAllButton = document.createElement('button');
-    scanAllButton.className = 'niblie-button niblie-scan-all-button';
-    scanAllButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-      </svg>
-    `;
-    scanAllButton.style.cssText = `
-      background: none;
-      border: none;
-      color: #5f6368;
-      cursor: pointer;
-      padding: 8px;
-      margin-right: 8px;
-      border-radius: 4px;
-      transition: background-color 0.2s;
-    `;
-    scanAllButton.title = "Scan entire page for videos";
-    
-    // Add event listener for scan all button
-    scanAllButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      
-      // Show loading indicator
-      mainContent.innerHTML = '';
-      mainContent.appendChild(contentHeader);
-      
-      const loadingIndicator = document.createElement('div');
-      loadingIndicator.className = 'niblie-loading';
-      loadingIndicator.innerHTML = `
-        <div class="niblie-spinner"></div>
-        <p>Scanning entire page for videos...</p>
-      `;
-      loadingIndicator.style.cssText = `
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 40px 0;
-      `;
-      
-      const spinner = loadingIndicator.querySelector('.niblie-spinner');
-      spinner.style.cssText = `
-        width: 40px;
-        height: 40px;
-        border: 4px solid rgba(66, 133, 244, 0.2);
-        border-radius: 50%;
-        border-top-color: #4285f4;
-        animation: niblie-spin 1s linear infinite;
-        margin-bottom: 15px;
-      `;
-      
-      mainContent.appendChild(loadingIndicator);
-      
-      // Call VideoFinder with scanEntirePage flag
-      if (window.VideoFinder) {
-        // Clear cache to force fresh scan
-        window.VideoFinder.clearCache();
-        
-        // Set a flag to scan entire page
-        window.VideoFinder.scanEntirePage = true;
-        
-        // Reload the videos section with force refresh
-        setTimeout(() => {
-          this.loadVideosSection(true);
-          
-          // Reset flag after scan
-          window.VideoFinder.scanEntirePage = false;
-        }, 100);
-      }
-    });
-    
-    actionButtons.appendChild(scanAllButton);
-    actionButtons.appendChild(settingsButton);
-    actionButtons.appendChild(closeButton);
     contentHeader.appendChild(sectionTitle);
-    contentHeader.appendChild(actionButtons);
-    
-    // Add header to main content
+    contentHeader.appendChild(closeButton);
     mainContent.appendChild(contentHeader);
     
-    // Create and add videos content
-    if (window.VideoUI) {
-      const videosContent = VideoUI.createVideosContent(forceRefresh);
-      mainContent.appendChild(videosContent);
-    } else {
-      const errorMsg = document.createElement('div');
-      errorMsg.textContent = 'Video finder module is not available.';
-      errorMsg.style.cssText = `
-        padding: 40px;
-        text-align: center;
-        color: #d93025;
-      `;
-      mainContent.appendChild(errorMsg);
-    }
+    // Add placeholder content
+    const placeholderContent = document.createElement('div');
+    placeholderContent.textContent = 'Videos section - Implementation pending';
+    placeholderContent.style.cssText = `
+      padding: 40px;
+      text-align: center;
+      color: #5f6368;
+      font-style: italic;
+    `;
+    mainContent.appendChild(placeholderContent);
   },
 
   /**
@@ -1155,46 +823,75 @@ const ModalUI = {
       font-weight: 500;
     `;
     
-    const actionButtons = document.createElement('div');
-    actionButtons.className = 'niblie-actions';
-    
-    const refreshButton = document.createElement('button');
-    refreshButton.className = 'niblie-button niblie-refresh-button';
-    refreshButton.innerHTML = `
+    const closeButton = document.createElement('button');
+    closeButton.className = 'niblie-button niblie-close-button';
+    closeButton.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
       </svg>
     `;
-    refreshButton.style.cssText = `
+    closeButton.style.cssText = `
       background: none;
       border: none;
       color: #5f6368;
       cursor: pointer;
       padding: 8px;
-      margin-right: 8px;
       border-radius: 4px;
       transition: background-color 0.2s;
     `;
-    refreshButton.title = "Refresh tables";
     
-    const settingsButton = document.createElement('button');
-    settingsButton.className = 'niblie-button niblie-settings-button';
-    settingsButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
-        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z"/>
-      </svg>
-    `;
-    settingsButton.style.cssText = `
-      background: none;
-      border: none;
+    closeButton.addEventListener('click', () => this.closeModal());
+    
+    contentHeader.appendChild(sectionTitle);
+    contentHeader.appendChild(closeButton);
+    mainContent.appendChild(contentHeader);
+    
+    // Add placeholder content
+    const placeholderContent = document.createElement('div');
+    placeholderContent.textContent = 'Tables section - Implementation pending';
+    placeholderContent.style.cssText = `
+      padding: 40px;
+      text-align: center;
       color: #5f6368;
-      cursor: pointer;
-      padding: 8px;
-      margin-right: 8px;
-      border-radius: 4px;
-      transition: background-color 0.2s;
+      font-style: italic;
+    `;
+    mainContent.appendChild(placeholderContent);
+  },
+
+  /**
+   * Loads and displays the ad blockers section content
+   * @param {boolean} forceRefresh - Whether to force refreshing data
+   */
+  loadAdBlockersSection: function(forceRefresh = false) {
+    // Update navigation state
+    this._updateSidebarNavigation('adblockers');
+    
+    // Get main content area
+    const mainContent = document.querySelector('.niblie-main-content');
+    if (!mainContent) return;
+    
+    // Clear existing content
+    mainContent.innerHTML = '';
+    
+    // Create header
+    const contentHeader = document.createElement('div');
+    contentHeader.className = 'niblie-content-header';
+    contentHeader.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #e4e8ed;
+    `;
+    
+    const sectionTitle = document.createElement('h2');
+    sectionTitle.textContent = 'Ad Blockers';
+    sectionTitle.style.cssText = `
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+      color: #202124;
     `;
     
     const closeButton = document.createElement('button');
@@ -1214,157 +911,296 @@ const ModalUI = {
       transition: background-color 0.2s;
     `;
     
-    // Events for buttons
-    closeButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.closeModal();
-    });
+    closeButton.addEventListener('click', () => this.closeModal());
     
-    refreshButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.loadTablesSection(true);
-    });
-    
-    settingsButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (typeof this._showSettingsView === 'function') {
-        this._showSettingsView();
-      }
-    });
-    
-    // Add hover effects
-    [closeButton, settingsButton, refreshButton].forEach(btn => {
-      btn.addEventListener('mouseenter', () => {
-        btn.style.backgroundColor = '#f1f3f4';
-        btn.style.color = '#202124';
-      });
-      btn.addEventListener('mouseleave', () => {
-        btn.style.backgroundColor = '';
-        btn.style.color = '#5f6368';
-      });
-    });
-    
-    // Add scan all button
-    const scanAllButton = document.createElement('button');
-    scanAllButton.className = 'niblie-button niblie-scan-all-button';
-    scanAllButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-      </svg>
-    `;
-    scanAllButton.style.cssText = `
-      background: none;
-      border: none;
-      color: #5f6368;
-      cursor: pointer;
-      padding: 8px;
-      margin-right: 8px;
-      border-radius: 4px;
-      transition: background-color 0.2s;
-    `;
-    scanAllButton.title = "Scan entire page for tables";
-    
-    // Add event listener for scan all button
-    scanAllButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      
-      // Show loading indicator
-      mainContent.innerHTML = '';
-      mainContent.appendChild(contentHeader);
-      
-      const loadingIndicator = document.createElement('div');
-      loadingIndicator.className = 'niblie-loading';
-      loadingIndicator.innerHTML = `
-        <div class="niblie-spinner"></div>
-        <p>Scanning entire page for tables...</p>
-      `;
-      loadingIndicator.style.cssText = `
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 40px 0;
-      `;
-      
-      const spinner = loadingIndicator.querySelector('.niblie-spinner');
-      spinner.style.cssText = `
-        width: 40px;
-        height: 40px;
-        border: 4px solid rgba(66, 133, 244, 0.2);
-        border-radius: 50%;
-        border-top-color: #4285f4;
-        animation: niblie-spin 1s linear infinite;
-        margin-bottom: 15px;
-      `;
-      
-      mainContent.appendChild(loadingIndicator);
-      
-      // Call TableFinder with scanEntirePage flag
-      if (window.TableFinder) {
-        // Clear cache to force fresh scan
-        window.TableFinder.clearCache();
-        
-        // Set a flag to scan entire page
-        window.TableFinder.scanEntirePage = true;
-        
-        // Reload the tables section with force refresh
-        setTimeout(() => {
-          this.loadTablesSection(true);
-          
-          // Reset flag after scan
-          window.TableFinder.scanEntirePage = false;
-        }, 100);
-      }
-    });
-    
-    actionButtons.appendChild(refreshButton);
-    actionButtons.appendChild(scanAllButton);
-    actionButtons.appendChild(settingsButton);
-    actionButtons.appendChild(closeButton);
     contentHeader.appendChild(sectionTitle);
-    contentHeader.appendChild(actionButtons);
-    
-    // Add header to main content
+    contentHeader.appendChild(closeButton);
     mainContent.appendChild(contentHeader);
     
-    // Create and add tables content
-    if (window.TableUI && typeof window.TableUI.createTablesContent === 'function') {
-      console.log('TableUI found in global scope');
-      try {
-        const tablesContent = window.TableUI.createTablesContent(forceRefresh);
-        mainContent.appendChild(tablesContent);
-      } catch (error) {
-        console.error('Error creating tables content:', error);
-        this._showErrorMessage(mainContent, 'An error occurred while creating tables content.');
+    // Create ad blockers content
+    this.createAdBlockersContent(mainContent);
+  },
+
+  /**
+   * Creates the ad blockers content
+   * @param {HTMLElement} container Container element
+   */
+  createAdBlockersContent: function(container) {
+    // Create loading indicator while fetching settings
+    const loadingSpinner = document.createElement('div');
+    loadingSpinner.className = 'niblie-loading';
+    loadingSpinner.innerHTML = `
+      <div class="niblie-spinner"></div>
+      <p>Loading ad blocker settings...</p>
+    `;
+    loadingSpinner.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 0;
+    `;
+    
+    const spinner = loadingSpinner.querySelector('.niblie-spinner');
+    spinner.style.cssText = `
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(66, 133, 244, 0.2);
+      border-radius: 50%;
+      border-top-color: #4285f4;
+      animation: niblie-spin 1s linear infinite;
+      margin-bottom: 15px;
+    `;
+    
+    container.appendChild(loadingSpinner);
+
+    // Try to get settings
+    const defaultBlockerData = [
+      {
+        platform: 'youtube',
+        name: 'YouTube',
+        icon: '📺',
+        features: [
+          'Block pre-roll video ads',
+          'Skip mid-roll advertisements', 
+          'Hide banner advertisements',
+          'Remove sponsored content',
+          'Fast-forward through ad breaks'
+        ],
+        settings: { enabled: false }
+      },
+      {
+        platform: 'spotify', 
+        name: 'Spotify',
+        icon: '🎵',
+        features: [
+          'Mute audio advertisements',
+          'Skip ad breaks automatically',
+          'Hide banner advertisements', 
+          'Remove sponsored playlists',
+          'Block popup advertisements'
+        ],
+        settings: { enabled: false }
+      },
+      {
+        platform: 'hotstar',
+        name: 'Hotstar',
+        icon: '🎬',
+        features: [
+          'Skip pre-roll video ads',
+          'Block mid-roll interruptions',
+          'Hide banner advertisements',
+          'Remove promoted content',
+          'Fast-forward ad segments'
+        ],
+        settings: { enabled: false }
+      },
+      {
+        platform: 'general',
+        name: 'General Web',
+        icon: '🌐',
+        features: [
+          'Block banner advertisements',
+          'Remove popup overlays',
+          'Hide video advertisements',
+          'Block tracking scripts',
+          'Remove sponsored content'
+        ],
+        settings: { enabled: false }
       }
-    } else if (window.ExtModules && window.ExtModules.TableUI && 
-              typeof window.ExtModules.TableUI.createTablesContent === 'function') {
-      console.log('TableUI found in ExtModules');
-      try {
-        const tablesContent = window.ExtModules.TableUI.createTablesContent(forceRefresh);
-        mainContent.appendChild(tablesContent);
-      } catch (error) {
-        console.error('Error creating tables content from ExtModules:', error);
-        this._showErrorMessage(mainContent, 'An error occurred while creating tables content.');
-      }
-    } else {
-      console.error('TableUI not found in any scope');
-      this._showErrorMessage(mainContent, 'Table finder module is not available.');
+    ];
+
+    // Simulate loading or use default data
+    setTimeout(() => {
+      // Hide loading spinner
+      loadingSpinner.style.display = 'none';
+
+      const blockersContainer = document.createElement('div');
+      blockersContainer.className = 'niblie-adblockers-container';
+      blockersContainer.style.cssText = `
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      `;
+
+      defaultBlockerData.forEach(blocker => {
+        const blockerCard = this.createBlockerCard(blocker);
+        blockersContainer.appendChild(blockerCard);
+      });
+
+      container.appendChild(blockersContainer);
+    }, 500);
+  },
+
+  /**
+   * Creates a single ad blocker card
+   * @param {Object} blocker Blocker data
+   * @returns {HTMLElement} Blocker card element
+   */
+  createBlockerCard: function(blocker) {
+    const card = document.createElement('div');
+    card.className = 'niblie-blocker-card';
+    card.style.cssText = `
+      background: white;
+      border: 1px solid #e4e8ed;
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.2s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    `;
+
+    card.addEventListener('mouseenter', () => {
+      card.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.15)';
+      card.style.transform = 'translateY(-2px)';
+    });
+
+    card.addEventListener('mouseleave', () => {
+      card.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+      card.style.transform = '';
+    });
+
+    // Header with icon and name
+    const header = document.createElement('div');
+    header.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    `;
+
+    const titleContainer = document.createElement('div');
+    titleContainer.style.cssText = `
+      display: flex;
+      align-items: center;
+    `;
+
+    const icon = document.createElement('span');
+    icon.textContent = blocker.icon;
+    icon.style.cssText = `
+      font-size: 24px;
+      margin-right: 10px;
+    `;
+
+    const title = document.createElement('h3');
+    title.textContent = blocker.name;
+    title.style.cssText = `
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+      color: #202124;
+    `;
+
+    titleContainer.appendChild(icon);
+    titleContainer.appendChild(title);
+
+    // Toggle switch
+    const toggle = document.createElement('label');
+    toggle.className = 'niblie-toggle-switch';
+    toggle.style.cssText = `
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+      cursor: pointer;
+    `;
+
+    const toggleInput = document.createElement('input');
+    toggleInput.type = 'checkbox';
+    toggleInput.checked = blocker.settings.enabled;
+    toggleInput.style.cssText = `
+      opacity: 0;
+      width: 0;
+      height: 0;
+    `;
+
+    const slider = document.createElement('span');
+    slider.style.cssText = `
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: ${blocker.settings.enabled ? '#4285f4' : '#ccc'};
+      transition: .4s;
+      border-radius: 26px;
+    `;
+
+    const sliderButton = document.createElement('span');
+    sliderButton.style.cssText = `
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: ${blocker.settings.enabled ? '27px' : '3px'};
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    `;
+
+    slider.appendChild(sliderButton);
+    toggle.appendChild(toggleInput);
+    toggle.appendChild(slider);
+
+    // Toggle event
+    toggleInput.addEventListener('change', () => {
+      const isEnabled = toggleInput.checked;
+      slider.style.backgroundColor = isEnabled ? '#4285f4' : '#ccc';
+      sliderButton.style.left = isEnabled ? '27px' : '3px';
       
-      // Try to re-register modules if possible
-      if (typeof registerModules === 'function') {
-        console.log('Attempting to re-register modules');
-        registerModules();
-        
-        // Check again after a short delay
-        setTimeout(() => {
-          if (window.TableUI || (window.ExtModules && window.ExtModules.TableUI)) {
-            console.log('TableUI found after re-registration, reloading');
-            this.loadTablesSection(forceRefresh);
-          }
-        }, 500);
+      // Save to storage (if available)
+      if (window.AdBlockerStorage) {
+        window.AdBlockerStorage.updatePlatformSettings(blocker.platform, { enabled: isEnabled });
       }
-    }
+      
+      // Initialize blocker if enabled
+      if (isEnabled && window.BlockerUI) {
+        window.BlockerUI.initializePlatformBlocker(blocker.platform);
+      }
+
+      console.log(`${blocker.name} ad blocker ${isEnabled ? 'enabled' : 'disabled'}`);
+    });
+
+    header.appendChild(titleContainer);
+    header.appendChild(toggle);
+
+    // Features list
+    const featuresList = document.createElement('ul');
+    featuresList.style.cssText = `
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    `;
+
+    blocker.features.forEach(feature => {
+      const featureItem = document.createElement('li');
+      featureItem.style.cssText = `
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #5f6368;
+      `;
+
+      const checkmark = document.createElement('span');
+      checkmark.textContent = '✓';
+      checkmark.style.cssText = `
+        color: #34a853;
+        margin-right: 8px;
+        font-weight: bold;
+        font-size: 12px;
+      `;
+
+      featureItem.appendChild(checkmark);
+      featureItem.appendChild(document.createTextNode(feature));
+      featuresList.appendChild(featureItem);
+    });
+
+    card.appendChild(header);
+    card.appendChild(featuresList);
+
+    return card;
   },
   
   /**
@@ -1475,10 +1311,10 @@ const ModalUI = {
         overflow: hidden;
       `;
       
-      // CHANGED: Swapped display priority - URL first, then text
+      // URL first, then text
       const linkUrl = document.createElement('div');
-      linkUrl.textContent = link.href; // FIXED: Using href instead of url
-      linkUrl.title = link.href; // FIXED: Using href instead of url
+      linkUrl.textContent = link.href || link.url || '';
+      linkUrl.title = link.href || link.url || '';
       linkUrl.style.cssText = `
         font-weight: 500;
         white-space: nowrap;
@@ -1498,481 +1334,235 @@ const ModalUI = {
         color: #5f6368;
       `;
       
-      linkText.appendChild(linkUrl); // URL first
-      linkText.appendChild(linkTitle); // Text second
+      linkText.appendChild(linkUrl);
+      linkText.appendChild(linkTitle);
     
-    // Action buttons
-    const buttonContainer = document.createElement('div');
-    buttonContainer.className = 'niblie-link-actions';
-    buttonContainer.style.cssText = `
-      margin-left: 15px;
-      display: flex;
-      gap: 5px;
-    `;
-    
-    const copyButton = document.createElement('button');
-    copyButton.className = 'niblie-button niblie-copy-button';
-    copyButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-        <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
-      </svg>
-    `;
-    copyButton.style.cssText = `
-      background: none;
-      border: none;
-      color: #5f6368;
-      cursor: pointer;
-      padding: 5px;
-      border-radius: 4px;
-      transition: all 0.2s;
-    `;
-    copyButton.title = "Copy link URL";
-    
-    const openButton = document.createElement('button');
-    openButton.className = 'niblie-button niblie-open-button';
-    openButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-        <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
-        <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
-      </svg>
-    `;
-    openButton.style.cssText = `
-      background: none;
-      border: none;
-      color: #5f6368;
-      cursor: pointer;
-      padding: 5px;
-      border-radius: 4px;
-      transition: all 0.2s;
-    `;
-    openButton.title = "Open link in new tab";
-    
-    // Button hover effects
-    [copyButton, openButton].forEach(btn => {
-      btn.addEventListener('mouseenter', () => {
-        btn.style.backgroundColor = '#f1f3f4';
-        btn.style.color = '#202124';
+      // Action buttons
+      const buttonContainer = document.createElement('div');
+      buttonContainer.className = 'niblie-link-actions';
+      buttonContainer.style.cssText = `
+        margin-left: 15px;
+        display: flex;
+        gap: 5px;
+      `;
+      
+      const copyButton = document.createElement('button');
+      copyButton.className = 'niblie-button niblie-copy-button';
+      copyButton.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+          <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+        </svg>
+      `;
+      copyButton.style.cssText = `
+        background: none;
+        border: none;
+        color: #5f6368;
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 4px;
+        transition: all 0.2s;
+      `;
+      copyButton.title = "Copy link URL";
+      
+      const openButton = document.createElement('button');
+      openButton.className = 'niblie-button niblie-open-button';
+      openButton.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+          <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+        </svg>
+      `;
+      openButton.style.cssText = `
+        background: none;
+        border: none;
+        color: #5f6368;
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 4px;
+        transition: all 0.2s;
+      `;
+      openButton.title = "Open link in new tab";
+      
+      // Button hover effects
+      [copyButton, openButton].forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+          btn.style.backgroundColor = '#f1f3f4';
+          btn.style.color = '#202124';
+        });
+        
+        btn.addEventListener('mouseleave', () => {
+          btn.style.backgroundColor = '';
+          btn.style.color = '#5f6368';
+        });
       });
       
-      btn.addEventListener('mouseleave', () => {
-        btn.style.backgroundColor = '';
-        btn.style.color = '#5f6368';
-      });
-    });
-    
-    // FIXED: Button actions - using href instead of url
-    copyButton.addEventListener('click', () => {
-      navigator.clipboard.writeText(link.href).then(() => {
-        copyButton.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
-          </svg>
-        `;
-        copyButton.style.color = '#34A853';
-        
-        setTimeout(() => {
+      // Button actions
+      copyButton.addEventListener('click', () => {
+        const urlToCopy = link.href || link.url || '';
+        navigator.clipboard.writeText(urlToCopy).then(() => {
           copyButton.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-              <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
-      </svg>
+              <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+            </svg>
           `;
-          copyButton.style.color = '#5f6368';
-        }, 2000);
-      }).catch(err => {
-        console.error('Could not copy text: ', err);
+          copyButton.style.color = '#34A853';
+          
+          setTimeout(() => {
+            copyButton.innerHTML = `
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+              </svg>
+            `;
+            copyButton.style.color = '#5f6368';
+          }, 2000);
+        }).catch(err => {
+          console.error('Could not copy text: ', err);
+        });
       });
-    });
-    
-    openButton.addEventListener('click', () => {
-      window.open(link.href, '_blank'); // FIXED: Using href instead of url
-    });
-    
-    buttonContainer.appendChild(copyButton);
-    buttonContainer.appendChild(openButton);
-    itemContainer.appendChild(linkText);
-    itemContainer.appendChild(buttonContainer);
-    listItem.appendChild(itemContainer);
-    linksList.appendChild(listItem);
-  });
-  
-  categorySection.appendChild(header);
-  categorySection.appendChild(linksList);
-  container.appendChild(categorySection);
-},
-
-/**
- * Load a specific section of the modal
- * @param {string} section - Section name to load
- * @param {boolean} forceRefresh - Whether to force refreshing data
- */
-_loadSection: function(section, forceRefresh = false) {
-  // Update current section
-  this.currentSection = section;
-  
-  // Update navigation UI
-  this._updateSidebarNavigation(section);
-  
-  // Load appropriate section content
-  switch(section) {
-    case 'links':
-      this.loadLinksSection(forceRefresh);
-      break;
-    case 'images':
-      this.loadImagesSection(forceRefresh);
-      break;
-    case 'videos':
-      this.loadVideosSection(forceRefresh);
-      break;
-    case 'tables':
-      this.loadTablesSection(forceRefresh);
-      break;
-    default:
-      console.warn(`Unknown section: ${section}`);
-      this.loadLinksSection(forceRefresh);
-  }
-},
-
-/**
- * Updates the sidebar navigation to highlight the active section
- * @param {string} activeSection - The section to mark as active
- */
-_updateSidebarNavigation: function(activeSection) {
-  if (!this.modal) return;
-  
-  // Get all nav items
-  const navItems = this.modal.querySelectorAll('.niblie-nav-item');
-  
-  // Update styles for each item
-  navItems.forEach(item => {
-    const isActive = item.dataset.section === activeSection;
-    
-    item.className = isActive ? 'niblie-nav-item niblie-nav-active' : 'niblie-nav-item';
-    item.style.color = isActive ? '#1a73e8' : '#5f6368';
-    item.style.fontWeight = isActive ? '500' : '400';
-    item.style.backgroundColor = isActive ? 'rgba(26, 115, 232, 0.1)' : 'transparent';
-    item.style.borderLeft = isActive ? '4px solid #1a73e8' : '4px solid transparent';
-  });
-},
-
-/**
- * Shows or hides link categories based on tab selection
- * @param {string} category - Selected category, or 'all' for all categories
- */
-_showCategoryLinks: function(category) {
-  const content = document.getElementById('niblie-links-content');
-  if (!content) return;
-  
-  const categories = content.querySelectorAll('.niblie-link-category');
-  
-  // Show/hide categories based on selection
-  categories.forEach(cat => {
-    if (category === 'all' || cat.dataset.category === category) {
-      cat.style.display = 'block';
-    } else {
-      cat.style.display = 'none';
-    }
-  });
-  
-  // If no links are shown, display a message
-  let visibleCount = 0;
-  categories.forEach(cat => {
-    if (cat.style.display !== 'none') {
-      visibleCount++;
-    }
-  });
-  
-  // Remove existing message if it exists
-  const existingMsg = content.querySelector('.niblie-no-category-links');
-  if (existingMsg) {
-    existingMsg.remove();
-  }
-  
-  // Add message if no links in this category
-  if (visibleCount === 0) {
-    const noCategoryLinks = document.createElement('div');
-    noCategoryLinks.className = 'niblie-no-category-links';
-    noCategoryLinks.textContent = 'No links found in this category.';
-    noCategoryLinks.style.cssText = `
-      padding: 20px;
-      text-align: center;
-      color: #5f6368;
-      font-style: italic;
-    `;
-    content.appendChild(noCategoryLinks);
-  }
-},
-
-/**
- * Shows an error message in the content area
- * @param {HTMLElement} container - The container to show the message in
- * @param {string} message - The error message to display
- */
-_showErrorMessage: function(container, message) {
-  // Clear existing content
-  container.innerHTML = '';
-  
-  const errorMsg = document.createElement('div');
-  errorMsg.className = 'niblie-error';
-  errorMsg.textContent = message;
-  errorMsg.style.cssText = `
-    padding: 40px 0;
-    text-align: center;
-    color: #d93025;
-  `;
-  container.appendChild(errorMsg);
-},
-
-/**
- * Gets the appropriate icon element for a given category
- * @param {string} category - The category to get the icon for
- * @returns {HTMLElement} The icon element
- */
-getCategoryIcon: function(category) {
-  // Default icon (link)
-  const icon = document.createElement('span');
-  icon.className = 'niblie-category-icon';
-  icon.innerHTML = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-      <path d="M8.354 1.146a.5.5 0 0 1 .293.5V4.5h2.5a.5.5 0 0 1 0 1H8.646a.5.5 0 0 1-.354-.854L9.793 2.5H8.5a.5.5 0 0 1-.354-.854l.208-.208a.5.5 0 0 1 .354-.146zM4.5 8a.5.5 0 0 1 .5-.5h2.5V5.5a.5.5 0 0 1 1 0v2.5h2.5a.5.5 0 0 1 0 1H8.5v2.5a.5.5 0 0 1-1 0V8.5H5a.5.5 0 0 1-.5-.5z"/>
-    </svg>
-  `;
-  
-  // Customize icons for specific categories
-  switch(category) {
-    case 'socialLinks':
-      icon.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M8 0a8 8 0 1 0 8 8A8.009 8.009 0 0 0 8 0zm3.646 11.354a.5.5 0 0 1-.708 0L8 9.207l-2.938 2.147a.5.5 0 0 1-.708-.708l3.646-3.646a.5.5 0 0 1 .708 0l3.646 3.646a.5.5 0 0 1 0 .708z"/>
-        </svg>
-      `;
-      break;
-    case 'externalLinks':
-      icon.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-        </svg>
-      `;
-      break;
-    case 'internalLinks':
-      icon.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M8.354 1.146a.5.5 0 0 1 .293.5V4.5h2.5a.5.5 0 0 1 0 1H8.646a.5.5 0 0 1-.354-.854L9.793 2.5H8.5a.5.5 0 0 1-.354-.854l.208-.208a.5.5 0 0 1 .354-.146zM4.5 8a.5.5 0 0 1 .5-.5h2.5V5.5a.5.5 0 0 1 1 0v2.5h2.5a.5.5 0 0 1 0 1H8.5v2.5a.5.5 0 0 1-1 0V8.5H5a.5.5 0 0 1-.5-.5z"/>
-        </svg>
-      `;
-      break;
-    case 'documentLinks':
-      icon.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M8 0a8 8 0 1 0 8 8A8.009 8.009 0 0 0 8 0zm3.646 11.354a.5.5 0 0 1-.708 0L8 9.207l-2.938 2.147a.5.5 0 0 1-.708-.708L7.293 8 5.146 5.854a.5.5 0 0 1 .708-.708L8 7.293l2.646-2.147a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1 0 .708z"/>
-        </svg>
-      `;
-      break;
-    case 'mediaLinks':
-      icon.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M8 0a8 8 0 1 0 8 8A8.009 8.009 0 0 0 8 0zm3.646 11.354a.5.5 0 0 1-.708 0L8 9.207l-2.938 2.147a.5.5 0 0 1-.708-.708L7.293 8 5.146 5.854a.5.5 0 0 1 .708-.708L8 7.293l2.646-2.147a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1 0 .708z"/>
-        </svg>
-      `;
-      break;
-    case 'emailLinks':
-      icon.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M8 0a8 8 0 1 0 8 8A8.009 8.009 0 0 0 8 0zm3.646 11.354a.5.5 0 0 1-.708 0L8 9.207l-2.938 2.147a.5.5 0 0 1-.708-.708L7.293 8 5.146 5.854a.5.5 0 0 1 .708-.708L8 7.293l2.646-2.147a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1 0 .708z"/>
-        </svg>
-      `;
-      break;
-    case 'navigationLinks':
-      icon.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M8 0a8 8 0 1 0 8 8A8.009 8.009 0 0 0 8 0zm3.646 11.354a.5.5 0 0 1-.708 0L8 9.207l-2.938 2.147a.5.5 0 0 1-.708-.708L7.293 8 5.146 5.854a.5.5 0 0 1 .708-.708L8 7.293l2.646-2.147a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1 0 .708z"/>
-        </svg>
-      `;
-      break;
-  }
-  
-  return icon;
-},
-
-/**
- * Initializes the modal UI component
- */
-init: function() {
-  // Create modal element
-  this.createModal();
-  
-  // Close modal on ESC key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && this.isOpen) {
-      this.closeModal();
-    }
-  });
-},
-
-/**
- * Destroys the modal UI component
- */
-destroy: function() {
-  if (!this.modal) return;
-  
-  // Remove event listeners
-  document.removeEventListener('keydown', this._handleKeyDown);
-  document.removeEventListener('wheel', this._preventScroll, { passive: false });
-  document.removeEventListener('touchmove', this._preventScroll, { passive: false });
-  
-  // Remove modal from DOM
-  this.modal.remove();
-  this.modal = null;
-},
-
-/**
- * Handles key down events for the modal
- * @param {KeyboardEvent} e - The keyboard event
- */
-_handleKeyDown: function(e) {
-  // Close modal on ESC key
-  if (e.key === 'Escape' && ModalUI.isOpen) {
-    ModalUI.closeModal();
-  }
-},
-
-/**
- * Prevents background scrolling but allows scrolling within the modal
- * @param {Event} e - The event object
- */
-_preventScroll: function(e) {
-  if (!this.isOpen) return;
-  
-  // Find if the scroll event originated from within modal content
-  const modalContent = document.querySelector('.niblie-main-content');
-  if (!modalContent) return;
-  
-  let target = e.target;
-  let isWithinModalContent = false;
-  
-  // Check if scroll event is within modal content area
-  while (target) {
-    if (target === modalContent) {
-      isWithinModalContent = true;
-      break;
-    }
-    target = target.parentElement;
-  }
-  
-  // Only prevent default if not within modal content
-  if (!isWithinModalContent) {
-    e.preventDefault();
-  }
-},
-
-/**
- * Helper method to ensure scrolling works correctly in all cases
- */
-_ensureScrollingWorks: function() {
-  // Fix main content scrolling
-  const mainContent = document.querySelector('.niblie-main-content');
-  if (mainContent) {
-    mainContent.style.overflow = 'auto';
-    mainContent.style.overflowX = 'hidden';
-    mainContent.style.overflowY = 'auto';
-    mainContent.style.maxHeight = 'calc(80vh - 60px)';
-  }
-  
-  // Fix table preview scrolling
-  const tablePreviewElements = document.querySelectorAll('.niblie-table-preview');
-  tablePreviewElements.forEach(preview => {
-    preview.style.position = 'relative'; // For absolute positioning of overlay
-    preview.style.overflowX = 'auto';
-    preview.style.maxHeight = '200px';
-  });
-},
-
-/**
- * Adds a global style to enforce scrolling in the modal content
- * This is the most reliable way to ensure scrolling works
- */
-_addScrollingStyles: function() {
-  // Check if we already added the style
-  if (document.getElementById('niblie-scroll-styles')) return;
-  
-  // Create a style element
-  const style = document.createElement('style');
-  style.id = 'niblie-scroll-styles';
-  
-  // Add styles that force scrolling to work in the modal
-  style.textContent = `
-    .niblie-main-content {
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
-      max-height: calc(80vh - 60px) !important;
-      -webkit-overflow-scrolling: touch !important;
-    }
-    
-    .niblie-table-preview {
-      overflow-x: auto !important;
-      max-height: 200px !important;
-      position: relative !important;
-    }
-    
-    .niblie-modal-content {
-      overflow: hidden !important;
-    }
-  `;
-  
-  // Add the style to the document head
-  document.head.appendChild(style);
-  console.log('Added scroll styles to document');
-},
-
-/**
- * Fixes scrolling inside the modal
- */
-fixScrollBehavior: function() {
-  console.log('Applying scroll behavior fix');
-  
-  // 1. Remove any existing wheel/touch event listeners that might interfere
-  if (this._boundPreventScroll) {
-    document.removeEventListener('wheel', this._boundPreventScroll, { passive: false });
-    document.removeEventListener('touchmove', this._boundPreventScroll, { passive: false });
-  }
-  
-  // 2. Set explicit CSS to force scrolling to work in the main content area
-  const mainContent = document.querySelector('.niblie-main-content');
-  if (mainContent) {
-    mainContent.style.cssText += `
-      overflow-y: scroll !important; 
-      overflow-x: hidden !important;
-      max-height: calc(80vh - 120px) !important;
-      -webkit-overflow-scrolling: touch !important;
-    `;
-    
-    // Make sure the content is actually scrollable by preventing event propagation
-    mainContent.addEventListener('wheel', function(e) {
-      e.stopPropagation();
-    }, { passive: true });
-  }
-  
-  // 3. Inject a style tag with !important rules to override any conflicting styles
-  if (!document.getElementById('niblie-scroll-fix')) {
-    const style = document.createElement('style');
-    style.id = 'niblie-scroll-fix';
-    style.innerHTML = `
-      .niblie-main-content {
-        overflow-y: scroll !important;
-        overflow-x: hidden !important;
-        max-height: calc(80vh - 120px) !important;
-      }
       
-      .niblie-table-preview {
-        overflow: auto !important;
-        max-height: 200px !important;
-      }
-    `;
-    document.head.appendChild(style);
-  }
-}
-};
+      openButton.addEventListener('click', () => {
+        const urlToOpen = link.href || link.url || '';
+        if (urlToOpen) {
+          window.open(urlToOpen, '_blank');
+        }
+      });
+      
+      buttonContainer.appendChild(copyButton);
+      buttonContainer.appendChild(openButton);
+      itemContainer.appendChild(linkText);
+      itemContainer.appendChild(buttonContainer);
+      listItem.appendChild(itemContainer);
+      linksList.appendChild(listItem);
+    });
+    
+    categorySection.appendChild(header);
+    categorySection.appendChild(linksList);
+    container.appendChild(categorySection);
+  },
 
-// Initialize the ModalUI component
-ModalUI.init();
+  /**
+   * Load a specific section of the modal
+   * @param {string} section - Section name to load
+   * @param {boolean} forceRefresh - Whether to force refreshing data
+   */
+  _loadSection: function(section, forceRefresh = false) {
+    // Update current section
+    this.currentSection = section;
+    
+    // Update navigation UI
+    this._updateSidebarNavigation(section);
+    
+    // Load appropriate section content
+    switch(section) {
+      case 'links':
+        this.loadLinksSection(forceRefresh);
+        break;
+      case 'images':
+        this.loadImagesSection(forceRefresh);
+        break;
+      case 'videos':
+        this.loadVideosSection(forceRefresh);
+        break;
+      case 'tables':
+        this.loadTablesSection(forceRefresh);
+        break;
+      case 'adblockers':
+        this.loadAdBlockersSection(forceRefresh);
+        break;
+      default:
+        console.warn(`Unknown section: ${section}`);
+        this.loadLinksSection(forceRefresh);
+    }
+  },
+
+  /**
+   * Updates the sidebar navigation to highlight the active section
+   * @param {string} activeSection - The section to mark as active
+   */
+  _updateSidebarNavigation: function(activeSection) {
+    if (!this.modal) return;
+    
+    // Get all nav items
+    const navItems = this.modal.querySelectorAll('.niblie-nav-item');
+    
+    // Update styles for each item
+    navItems.forEach(item => {
+      const isActive = item.dataset.section === activeSection;
+      
+      item.className = isActive ? 'niblie-nav-item niblie-nav-active' : 'niblie-nav-item';
+      item.style.color = isActive ? '#1a73e8' : '#5f6368';
+      item.style.fontWeight = isActive ? '500' : '400';
+      item.style.backgroundColor = isActive ? 'rgba(26, 115, 232, 0.1)' : 'transparent';
+      item.style.borderLeft = isActive ? '4px solid #1a73e8' : '4px solid transparent';
+    });
+  },
+
+  /**
+   * Adds scrolling styles to prevent body scroll when modal is open
+   */
+  _addScrollingStyles: function() {
+    if (!document.getElementById('niblie-scroll-styles')) {
+      const style = document.createElement('style');
+      style.id = 'niblie-scroll-styles';
+      style.textContent = `
+        .niblie-modal-open {
+          overflow: hidden !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  },
+
+  /**
+   * Fixes scroll behavior inside modal
+   */
+  fixScrollBehavior: function() {
+    if (!this.modal) return;
+    
+    const mainContent = this.modal.querySelector('.niblie-main-content');
+    if (mainContent) {
+      mainContent.style.overflowY = 'auto';
+      mainContent.style.height = '100%';
+    }
+  },
+
+  /**
+   * Gets category icon for links
+   * @param {string} category - Category name
+   * @returns {HTMLElement} Icon element
+   */
+  getCategoryIcon: function(category) {
+    const iconMap = {
+      'socialLinks': '👥',
+      'externalLinks': '🔗',
+      'internalLinks': '🏠',
+      'documentLinks': '📄',
+      'mediaLinks': '🎬',
+      'emailLinks': '✉️',
+      'navigationLinks': '🧭'
+    };
+    
+    const icon = document.createElement('span');
+    icon.textContent = iconMap[category] || '🔗';
+    return icon;
+  },
+
+  /**
+   * Shows or hides link categories based on tab selection
+   * @param {string} category - Selected category, or 'all' for all categories
+   */
+  _showCategoryLinks: function(category) {
+    const linkCategories = document.querySelectorAll('.niblie-link-category');
+    
+    linkCategories.forEach(categoryElement => {
+      if (category === 'all') {
+        categoryElement.style.display = 'block';
+      } else {
+        const categoryName = categoryElement.dataset.category;
+        categoryElement.style.display = categoryName === category ? 'block' : 'none';
+      }
+    });
+  }
+};

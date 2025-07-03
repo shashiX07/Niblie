@@ -211,6 +211,69 @@
       </div>
     </section>
 
+    <!-- Ad Blocker Settings Section -->
+    <section class="card">
+      <div class="card-header">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" fill="currentColor"/>
+        </svg>
+        <h2>Ad Blocker Settings</h2>
+      </div>
+      <div class="card-content">
+        <p>Configure ad blocking behavior and modal appearance</p>
+        
+        <div class="option-group">
+          <div class="toggle-wrapper">
+            <label for="show-enable-modal">Show enable modal on platforms</label>
+            <label class="switch">
+              <input type="checkbox" id="show-enable-modal" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <p class="hint">Shows a popup asking to enable ad blocker when visiting supported platforms</p>
+        </div>
+
+        <div class="option-group">
+          <label for="modal-timeout">Modal auto-close timeout (seconds)</label>
+          <div class="slider-with-value">
+            <input type="range" id="modal-timeout" min="10" max="120" value="44" step="1">
+            <span class="value-display">44s</span>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <label>Badge Animation Style</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="badge-animation" value="sprinkler" checked>
+              <span class="radio-custom"></span>
+              <span class="radio-text">Sprinkler ✨</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="badge-animation" value="pulse">
+              <span class="radio-custom"></span>
+              <span class="radio-text">Pulse 💗</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="badge-animation" value="shake">
+              <span class="radio-custom"></span>
+              <span class="radio-text">Shake 🎉</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="badge-animation" value="glow">
+              <span class="radio-custom"></span>
+              <span class="radio-text">Glow 🌟</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="badge-animation" value="bounce">
+              <span class="radio-custom"></span>
+              <span class="radio-text">Bounce ⚡</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <footer>
       <button id="save-btn" class="btn btn-primary">Save Settings</button>
       <span id="status-message"></span>
