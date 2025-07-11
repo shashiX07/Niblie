@@ -9,15 +9,35 @@
       "matches": ["<all_urls>"],
       "js": [
         "modules/moduleLoader.js",
-        "modules/wordCounter.js", 
-        "modules/ui.js", 
-        "modules/linkFinder.js", 
+        "modules/wordCounter.js",
+        "modules/ui.js",
+        "modules/linkFinder.js",
         "modules/imageFinder.js",
         "modules/videoFinder.js",
         "modules/tableFinder.js",
-        "modules/modal.js", 
+        "modules/modal.js",
         "content.js"
       ]
+    },
+    {
+      "matches": ["*://www.youtube.com/*"],
+      "js": ["adblockers/youtubeblocker.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["*://open.spotify.com/*"],
+      "js": ["adblockers/spotify-fastcomplete-adblocker.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["*://open.spotify.com/*"],
+      "js": ["adblockers/spotify-mute-adblocker.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["formAutofiller.js"],
+      "run_at": "document_idle"
     }
   ],
   "background": {
