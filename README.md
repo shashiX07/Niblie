@@ -4,7 +4,7 @@
 
 ---
 
-## 🆕 Version 1.2 Updates
+## 🆕 Version 0.2.0 Updates
 
 * Added working Ad Blocker for YouTube and Spotify
 *  Autofill Engine for form filling with JSON or ENV-style input
