@@ -68,7 +68,7 @@ You can use Niblie in two ways:
 
 ### 1. Manual Installation from ZIP
 
-1. [Download the latest ZIP release](https://github.com/shashiX07/Niblie/releases/download/chrome-extension/Niblie.zip)
+1. [Download the latest ZIP release](https://github.com/shashiX07/Niblie/releases/download/Niblie/Niblie-v0.2.0.zip)
 2. Extract the ZIP
 3. Open Chrome and go to `chrome://extensions/`
 4. Enable **Developer Mode** (top-right corner)
@@ -129,7 +129,7 @@ To manually inject autofill data via the DevTools Console:
 
 1. Open your extension's **Options Page**
 
-   * Or directly open: [chrome-extension://<Your-Niblie-Id-Here>/index.html](chrome-extension://jbghjfjlaamlkbaipigpoihjgbimpgpo/index.html)
+   * Or directly open: [chrome-extension://<Your-Niblie-Id-Here>/index.html](chrome-extension://<your-niblie-id-here>/index.html)
 
 2. Open **DevTools Console** (`Ctrl+Shift+I` or `Cmd+Option+I`)
 
@@ -190,7 +190,7 @@ Found a bug or issue? Please report it using this Google Form:
 
 ## 📎 Links
 
-* [Download ZIP](https://github.com/shashiX07/Niblie/releases/download/chrome-extension/Niblie.zip)
+* [Download ZIP](https://github.com/shashiX07/Niblie/releases/download/Niblie/Niblie-v0.2.0.zip)
 * [GitHub Repository](https://github.com/shashix07/Niblie)
 
 ---
