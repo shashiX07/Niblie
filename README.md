@@ -7,9 +7,11 @@
 ## 🆕 Version 0.2.0 Updates
 
 * Added working Ad Blocker for YouTube and Spotify
-*  Autofill Engine for form filling with JSON or ENV-style input
+* Autofill Engine for form filling with JSON or ENV-style input
 * Supports DevTools injection
-* Previos bug updates and UI fixes
+* Previous bug updates and UI fixes
+
+---
 
 ## 🌟 Features
 
@@ -73,6 +75,9 @@ You can use Niblie in two ways:
 5. Click **Load Unpacked** and select the extracted folder
 6. Niblie is now active! You’ll see the floating badge on any page.
 
+📁 **During initial setup, a file named `NiblieId.txt` will be downloaded automatically.**
+This file contains your extension's unique ID. Please **keep it safe**, especially if you plan to repackage or migrate the extension in the future.
+
 ### 2. Clone from GitHub (Recommended for Devs)
 
 ```bash
@@ -124,7 +129,7 @@ To manually inject autofill data via the DevTools Console:
 
 1. Open your extension's **Options Page**
 
-   * Or directly open: [chrome-extension://jbghjfjlaamlkbaipigpoihjgbimpgpo/index.html](chrome-extension://jbghjfjlaamlkbaipigpoihjgbimpgpo/index.html)
+   * Or directly open: [chrome-extension://<Your-Niblie-Id-Here>/index.html](chrome-extension://jbghjfjlaamlkbaipigpoihjgbimpgpo/index.html)
 
 2. Open **DevTools Console** (`Ctrl+Shift+I` or `Cmd+Option+I`)
 
@@ -191,5 +196,3 @@ Found a bug or issue? Please report it using this Google Form:
 ---
 
 > Made with 💖 by Shashi
-
-

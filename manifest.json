@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Viewport Word Counter",
+  "name": "Niblie : Smart Extension",
   "version": "0.2.0",
   "description": "Counts words in the current viewport and displays in a draggable badge",
-  "permissions": ["activeTab", "storage"],
+  "permissions": ["activeTab", "storage", "downloads"],
+  
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
