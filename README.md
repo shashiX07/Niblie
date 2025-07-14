@@ -129,7 +129,7 @@ To manually inject autofill data via the DevTools Console:
 
 1. Open your extension's **Options Page**
 
-   * Or directly open: [chrome-extension://<Your-Niblie-Id-Here>/index.html](chrome-extension://<your-niblie-id-here>/index.html)
+   * Or directly open: [chrome-extension://your-niblie-id-here/index.html](chrome-extension://<your-niblie-id-here>/index.html)
 
 2. Open **DevTools Console** (`Ctrl+Shift+I` or `Cmd+Option+I`)
 
@@ -146,7 +146,7 @@ chrome.storage.sync.set({
   ]
 });
 ```
-
+👉 You can download a sample file from [here]()
 Refresh the page and your data will appear in the extension.
 
 ---
