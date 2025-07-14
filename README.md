@@ -146,7 +146,7 @@ chrome.storage.sync.set({
   ]
 });
 ```
-<p>👉 You can download a sample file from [here](https://github.com/shashiX07/Niblie/releases/download/Niblie/sample.json)</p>
+👉 You can download a sample file from [here](https://github.com/shashiX07/Niblie/releases/download/Niblie/sample.json)
 ---
 
 ## 👨‍💻 Developers
