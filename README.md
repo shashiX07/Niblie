@@ -146,9 +146,8 @@ chrome.storage.sync.set({
   ]
 });
 ```
+Refresh the page and your data will appear in the extension.<br>
 👉 You can download a sample file from [here](https://github.com/shashiX07/Niblie/releases/download/Niblie/sample.json)
-Refresh the page and your data will appear in the extension.
-
 ---
 
 ## 👨‍💻 Developers
