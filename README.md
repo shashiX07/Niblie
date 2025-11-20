@@ -90,7 +90,7 @@ You can use Niblie in two ways:
 
 ### 1. Manual Installation from ZIP
 
-1. [Download the latest ZIP release](https://github.com/shashix07/Niblie/releases/latest)
+1. [Download v0.3.0 ZIP release](https://github.com/shashiX07/Niblie/archive/refs/tags/v0.3.0-Niblie.zip)
 2. Extract the ZIP
 3. Open Chrome and go to `chrome://extensions/`
 4. Enable **Developer Mode** (top-right corner)
@@ -213,7 +213,7 @@ Found a bug or issue? Please report it using this Google Form:
 
 ## 📎 Links
 
-* [Download Latest Release](https://github.com/shashix07/Niblie/releases/latest)
+* [Download v0.3.0 Release](https://github.com/shashiX07/Niblie/archive/refs/tags/v0.3.0-Niblie.zip)
 * [GitHub Repository](https://github.com/shashix07/Niblie)
 * [Landing Page](https://shashix07.github.io/Niblie/)
 
