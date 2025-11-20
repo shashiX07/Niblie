@@ -1,55 +1,71 @@
-
 /**
- * Core functionality for word counting
+ * Core utility functions for the extension
  */
 
-const WordCounter = {
+const CoreUtils = {
   /**
-   * Gets visible text from the current viewport
-   * @returns {string} Text content visible in viewport
+   * Debounce function to limit function execution frequency
+   * @param {Function} func - Function to debounce
+   * @param {number} wait - Wait time in milliseconds
+   * @returns {Function} Debounced function
    */
-  getVisibleText: function() {
-    const viewportHeight = window.innerHeight;
-    const elements = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, span, div, li, td, th, a');
-    let visibleText = '';
-    
-    // Filter for elements currently visible in the viewport
-    elements.forEach(element => {
-      const rect = element.getBoundingClientRect();
-      // Check if element is in viewport
-      if (rect.top >= 0 && rect.bottom <= viewportHeight) {
-        visibleText += ' ' + element.textContent;
-      }
-      // Element partially in viewport
-      else if ((rect.top < viewportHeight && rect.bottom > 0)) {
-        visibleText += ' ' + element.textContent;
-      }
-    });
-    
-    return visibleText;
+  debounce: function(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
   },
   
   /**
-   * Counts words in a given text
-   * @param {string} text - Text to count words in
-   * @returns {number} Word count
+   * Throttle function to limit function execution rate
+   * @param {Function} func - Function to throttle
+   * @param {number} limit - Time limit in milliseconds
+   * @returns {Function} Throttled function
    */
-  countWords: function(text) {
-    if (!text) return 0;
-    
-    // Remove special characters and extra spaces
-    const cleanText = text.trim().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ');
-    const words = cleanText.split(' ').filter(word => word.length > 0);
-    
-    return words.length;
+  throttle: function(func, limit) {
+    let inThrottle;
+    return function(...args) {
+      if (!inThrottle) {
+        func.apply(this, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    };
   },
   
   /**
-   * Gets current word count in viewport
-   * @returns {number} Word count
+   * Safe HTML escaping to prevent XSS
+   * @param {string} text - Text to escape
+   * @returns {string} Escaped text
    */
-  getViewportWordCount: function() {
-    const visibleText = this.getVisibleText();
-    return this.countWords(visibleText);
+  escapeHtml: function(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  },
+  
+  /**
+   * Check if element is visible in viewport
+   * @param {HTMLElement} element - Element to check
+   * @returns {boolean} True if visible
+   */
+  isElementInViewport: function(element) {
+    const rect = element.getBoundingClientRect();
+    return (
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
   }
 };
+
+// Export to global scope
+if (typeof window !== 'undefined') {
+  window.CoreUtils = CoreUtils;
+}

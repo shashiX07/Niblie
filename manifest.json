@@ -1,15 +1,21 @@
 {
   "manifest_version": 3,
   "name": "Niblie : Smart Extension",
-  "version": "0.2.0",
-  "description": "Counts words in the current viewport and displays in a draggable badge",
+  "version": "0.3.0",
+  "description": "Smart page analyzer with enhanced video/image detection, powerful ad blockers, and content extraction",
   "permissions": ["activeTab", "storage", "downloads"],
+  "host_permissions": ["<all_urls>"],
   
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "js": [
         "modules/moduleLoader.js",
+        "modules/errorHandler.js",
+        "modules/performanceMonitor.js",
+        "modules/settingsManager.js",
+        "modules/core.js",
+        "modules/accessibility.js",
         "modules/wordCounter.js",
         "modules/ui.js",
         "modules/linkFinder.js",
@@ -18,7 +24,8 @@
         "modules/tableFinder.js",
         "modules/modal.js",
         "content.js"
-      ]
+      ],
+      "run_at": "document_idle"
     },
     {
       "matches": ["*://www.youtube.com/*"],
@@ -27,13 +34,9 @@
     },
     {
       "matches": ["*://open.spotify.com/*"],
-      "js": ["adblockers/spotify-fastcomplete-adblocker.js"],
-      "run_at": "document_start"
-    },
-    {
-      "matches": ["*://open.spotify.com/*"],
       "js": ["adblockers/spotify-mute-adblocker.js"],
-      "run_at": "document_start"
+      "run_at": "document_end",
+      "all_frames": true
     },
     {
       "matches": ["<all_urls>"],
@@ -44,8 +47,20 @@
   "background": {
     "service_worker": "background.js"
   },
-  "options_page": "index.html",
+  "options_page": "settings.html",
+  "action": {
+    "default_popup": "settings.html",
+    "default_icon": {
+      "48": "icon48.png"
+    },
+    "default_title": "Niblie - Smart Extension"
+  },
   "icons": {
-    "48": "icon48.png"
+    "16": "icon48.png",
+    "48": "icon48.png",
+    "128": "icon48.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
   }
 }

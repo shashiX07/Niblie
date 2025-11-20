@@ -1,8 +1,33 @@
 /**
- * Advanced word counter module with improved accuracy
+ * Advanced word counter module with improved accuracy and performance
  */
 
-const ImprovedWordCounter = {
+const WordCounter = {
+  // Cache for enabled state
+  isEnabled: true,
+  
+  /**
+   * Initialize word counter with settings
+   */
+  init: async function() {
+    try {
+      // Check if SettingsManager is available
+      if (typeof SettingsManager !== 'undefined') {
+        const settings = await SettingsManager.get();
+        this.isEnabled = settings.showWordCount !== false;
+      } else {
+        // Fallback to chrome.storage
+        chrome.storage.sync.get('settings', (data) => {
+          const settings = data.settings || {};
+          this.isEnabled = settings.showWordCount !== false;
+        });
+      }
+    } catch (error) {
+      console.error('[Niblie WordCounter] Init error:', error);
+      this.isEnabled = true; // Default to enabled
+    }
+  },
+  
   /**
    * Gets visible text from the current viewport with improved element detection
    * @returns {string} Text content visible in viewport
@@ -12,7 +37,7 @@ const ImprovedWordCounter = {
     const viewportWidth = window.innerWidth;
     
     // More efficient selector - only get text elements
-    const selector = 'p, h1, h2, h3, h4, h5, h6, li, td, th, span, div:not(:has(*))';
+    const selector = 'p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label';
     const elements = document.querySelectorAll(selector);
     let visibleText = '';
     
@@ -36,33 +61,11 @@ const ImprovedWordCounter = {
   },
   
   /**
-   * Check if an element has direct text nodes (not just child elements)
-   * @param {Element} element - DOM element to check
-   * @returns {boolean} True if element has direct text nodes
-   */
-  _hasDirectTextNodes: function(element) {
-    return Array.from(element.childNodes)
-      .some(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '');
-  },
-  
-  /**
-   * Get only the direct text content of an element (not from child elements)
-   * @param {Element} element - DOM element to extract text from
-   * @returns {string} Direct text content
-   */
-  _getDirectTextContent: function(element) {
-    return Array.from(element.childNodes)
-      .filter(node => node.nodeType === Node.TEXT_NODE)
-      .map(node => node.textContent)
-      .join(' ');
-  },
-  
-  /**
-   * Counts words in a given text with improved accuracy
+   * Counts words in a given text string with improved accuracy
    * @param {string} text - Text to count words in
    * @returns {number} Word count
    */
-  countWords: function(text) {
+  _countWordsInText: function(text) {
     if (!text || typeof text !== 'string') return 0;
     
     // Unicode-aware word boundary pattern
@@ -74,6 +77,8 @@ const ImprovedWordCounter = {
     
     // First, normalize whitespace and remove extra spaces
     const normalizedText = text.trim().replace(/\s+/g, ' ');
+    
+    if (normalizedText === '') return 0;
     
     // Split by whitespace to get raw word count
     const rawWords = normalizedText.split(/\s+/);
@@ -93,7 +98,7 @@ const ImprovedWordCounter = {
    */
   getViewportWordCount: function() {
     const visibleText = this.getVisibleText();
-    return this.countWords(visibleText);
+    return this._countWordsInText(visibleText);
   },
   
   /**
@@ -104,7 +109,7 @@ const ImprovedWordCounter = {
   getTextStatistics: function(text) {
     if (!text) return { wordCount: 0, charCount: 0, avgWordLength: 0 };
     
-    const wordCount = this.countWords(text);
+    const wordCount = this._countWordsInText(text);
     const charCount = text.length;
     const avgWordLength = wordCount > 0 ? 
       Math.round((charCount / wordCount) * 10) / 10 : 0;
@@ -117,27 +122,29 @@ const ImprovedWordCounter = {
   },
   
   /**
-   * Count words in the current viewport
-   * @returns {number} Number of words visible in viewport
+   * Main entry point - count words in viewport
+   * Respects settings to enable/disable counting
+   * @returns {number} Number of words visible in viewport (0 if disabled)
    */
   countWords: function() {
     try {
-      // Get all text nodes in the viewport
-      const textNodes = this._getVisibleTextNodes();
-      
-      // Extract text content from visible nodes
-      let text = '';
-      for (const node of textNodes) {
-        text += ' ' + node.textContent;
+      // Check if word counting is enabled
+      if (!this.isEnabled) {
+        return 0;
       }
       
-      // Count words using regex
-      const wordCount = (text.trim().match(/\S+/g) || []).length;
-      console.log(`WordCounter: Found ${wordCount} words in viewport`);
-      
-      return wordCount;
+      // Get word count
+      const count = this.getViewportWordCount();
+      return count;
     } catch (error) {
-      console.error('WordCounter: Error counting words', error);
+      console.error('[Niblie WordCounter] Error counting words:', error);
+      if (typeof ErrorHandler !== 'undefined') {
+        ErrorHandler.logError({
+          type: 'word-counter',
+          message: error.message,
+          error
+        });
+      }
       return 0;
     }
   },
@@ -205,5 +212,7 @@ const ImprovedWordCounter = {
   }
 };
 
-// For backward compatibility, also expose through WordCounter
-window.WordCounter = ImprovedWordCounter;
+// Export WordCounter to global scope
+if (typeof window !== 'undefined') {
+  window.WordCounter = WordCounter;
+}

@@ -25,6 +25,7 @@ const VideoFinder = {
         html5Videos: [],
         youtubeVideos: [],
         vimeoVideos: [],
+        instagramReels: [],
         embedVideos: [],
         backgroundVideos: []
       };
@@ -32,8 +33,11 @@ const VideoFinder = {
       // Find HTML5 video elements
       this._findHTML5Videos(results.html5Videos);
       
-      // Find YouTube embedded videos
+      // Find YouTube embedded videos (enhanced detection)
       this._findYouTubeVideos(results.youtubeVideos);
+      
+      // Find Instagram reels (NEW)
+      this._findInstagramReels(results.instagramReels);
       
       // Find Vimeo embedded videos
       this._findVimeoVideos(results.vimeoVideos);
@@ -122,7 +126,7 @@ const VideoFinder = {
   },
   
   /**
-   * Find YouTube embedded videos
+   * Find YouTube embedded videos (Enhanced detection)
    * @param {Array} targetArray - Array to add found videos to
    * @private
    */
@@ -154,10 +158,136 @@ const VideoFinder = {
         height: iframe.height || iframe.clientHeight || 'unknown',
         videoId: videoId,
         embedUrl: src,
-        thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+        thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+        isStreaming: true
       };
       
       targetArray.push(videoInfo);
+    });
+    
+    // Also check for YouTube video links in the page (not just embeds)
+    const ytLinks = document.querySelectorAll('a[href*="youtube.com/watch"], a[href*="youtu.be/"]');
+    ytLinks.forEach(link => {
+      const href = link.href;
+      let videoId = '';
+      
+      // Extract from youtube.com/watch?v=ID
+      if (href.includes('youtube.com/watch')) {
+        const urlParams = new URLSearchParams(href.split('?')[1]);
+        videoId = urlParams.get('v');
+      }
+      // Extract from youtu.be/ID
+      else if (href.includes('youtu.be/')) {
+        const match = href.match(/youtu\.be\/([^/?]+)/);
+        if (match && match[1]) videoId = match[1];
+      }
+      
+      if (videoId && !targetArray.some(v => v.videoId === videoId)) {
+        targetArray.push({
+          element: link,
+          type: 'youtube',
+          width: 'unknown',
+          height: 'unknown',
+          videoId: videoId,
+          embedUrl: `https://www.youtube.com/embed/${videoId}`,
+          thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+          isStreaming: true,
+          isLink: true
+        });
+      }
+    });
+  },
+  
+  /**
+   * Find Instagram reels (NEW)
+   * @param {Array} targetArray - Array to add found videos to
+   * @private
+   */
+  _findInstagramReels: function(targetArray) {
+    // Method 1: Find Instagram embed iframes
+    const instagramIframes = Array.from(document.querySelectorAll('iframe')).filter(iframe => {
+      if (!this._isElementVisible(iframe)) return false;
+      const src = iframe.src || '';
+      return src.includes('instagram.com/') && (src.includes('/embed') || src.includes('/reel/'));
+    });
+    
+    instagramIframes.forEach(iframe => {
+      const src = iframe.src;
+      let reelId = '';
+      
+      // Extract reel ID from URL
+      const match = src.match(/\/(?:reel|p)\/([^/?]+)/);
+      if (match && match[1]) reelId = match[1];
+      
+      if (reelId) {
+        targetArray.push({
+          element: iframe,
+          type: 'instagram',
+          width: iframe.width || iframe.clientWidth || 'unknown',
+          height: iframe.height || iframe.clientHeight || 'unknown',
+          reelId: reelId,
+          embedUrl: src,
+          url: `https://www.instagram.com/reel/${reelId}/`,
+          isStreaming: true
+        });
+      }
+    });
+    
+    // Method 2: Find video elements on Instagram pages
+    if (window.location.hostname.includes('instagram.com')) {
+      const videos = document.querySelectorAll('video');
+      
+      videos.forEach((video, index) => {
+        if (!this._isElementVisible(video)) return;
+        
+        // Check if it's a reel by looking at the URL or parent elements
+        const isReel = window.location.pathname.includes('/reel/') || 
+                      video.closest('[role="dialog"]') || 
+                      video.closest('article');
+        
+        if (isReel && video.src) {
+          // Try to extract reel ID from current URL
+          let reelId = '';
+          const urlMatch = window.location.pathname.match(/\/(?:reel|p)\/([^/?]+)/);
+          if (urlMatch && urlMatch[1]) reelId = urlMatch[1];
+          
+          targetArray.push({
+            element: video,
+            type: 'instagram',
+            width: video.videoWidth || video.clientWidth || 'unknown',
+            height: video.videoHeight || video.clientHeight || 'unknown',
+            reelId: reelId || `reel_${index}`,
+            url: reelId ? `https://www.instagram.com/reel/${reelId}/` : window.location.href,
+            videoSrc: video.src,
+            isStreaming: true,
+            isDirect: true
+          });
+        }
+      });
+    }
+    
+    // Method 3: Find Instagram links
+    const igLinks = document.querySelectorAll('a[href*="instagram.com/reel/"], a[href*="instagram.com/p/"]');
+    igLinks.forEach(link => {
+      const href = link.href;
+      const match = href.match(/\/(?:reel|p)\/([^/?]+)/);
+      
+      if (match && match[1]) {
+        const reelId = match[1];
+        
+        if (!targetArray.some(v => v.reelId === reelId)) {
+          targetArray.push({
+            element: link,
+            type: 'instagram',
+            width: 'unknown',
+            height: 'unknown',
+            reelId: reelId,
+            url: `https://www.instagram.com/reel/${reelId}/`,
+            isStreaming: true,
+            isLink: true
+          });
+        }
+      }
     });
   },
   
@@ -514,6 +644,7 @@ const VideoUI = {
       { id: 'all', label: 'All Videos' },
       { id: 'html5Videos', label: 'HTML5' },
       { id: 'youtubeVideos', label: 'YouTube' },
+      { id: 'instagramReels', label: 'Instagram' },
       { id: 'vimeoVideos', label: 'Vimeo' },
       { id: 'embedVideos', label: 'Embedded' },
       { id: 'backgroundVideos', label: 'Background' }
@@ -1142,6 +1273,8 @@ const VideoUI = {
     
     return name;
   },
+  
+
   
   /**
    * Initialize UI

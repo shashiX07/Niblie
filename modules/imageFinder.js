@@ -32,31 +32,58 @@ const ImageFinder = {
       // Start timing for performance tracking
       const startTime = performance.now();
       
-      // First, find all regular <img> tags
-      this._findRegularImages(result.regularImages);
-      
-      // Find background images in CSS
-      this._findBackgroundImages(result.backgroundImages);
-      
-      // Find inline and referenced SVGs
-      this._findSvgImages(result.svgImages);
-      
-      // Find canvas elements
-      this._findCanvasImages(result.canvasImages);
-      
-      // Find picture elements and video posters
-      this._findMediaImages(result.mediaImages);
-      
-      // Log performance metrics
-      const endTime = performance.now();
-      console.log(`ImageFinder: Found ${this._countTotalImages(result)} images in ${Math.round(endTime - startTime)}ms`);
-      
-      // Cache the results
-      this.imageCache = result;
-      
-      // Return the results
-      resolve(result);
+      // Use requestIdleCallback for better performance (non-blocking)
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          this._scanImagesOptimized(result, startTime, resolve);
+        }, { timeout: 2000 });
+      } else {
+        // Fallback for browsers that don't support requestIdleCallback
+        this._scanImagesOptimized(result, startTime, resolve);
+      }
     });
+  },
+  
+  /**
+   * Optimized image scanning with batching
+   * @param {Object} result - Result object
+   * @param {number} startTime - Start time
+   * @param {Function} resolve - Promise resolve function
+   * @private
+   */
+  _scanImagesOptimized: function(result, startTime, resolve) {
+    // Batch scanning for better performance
+    const tasks = [
+      () => this._findRegularImages(result.regularImages),
+      () => this._findBackgroundImages(result.backgroundImages),
+      () => this._findSvgImages(result.svgImages),
+      () => this._findCanvasImages(result.canvasImages),
+      () => this._findMediaImages(result.mediaImages)
+    ];
+    
+    // Execute tasks sequentially but with micro-delays to prevent blocking
+    let currentTask = 0;
+    const executeTasks = () => {
+      if (currentTask < tasks.length) {
+        tasks[currentTask]();
+        currentTask++;
+        
+        // Use setTimeout with 0 delay to yield to browser between tasks
+        setTimeout(executeTasks, 0);
+      } else {
+        // All tasks completed
+        const endTime = performance.now();
+        console.log(`ImageFinder: Found ${this._countTotalImages(result)} images in ${Math.round(endTime - startTime)}ms`);
+        
+        // Cache the results
+        this.imageCache = result;
+        
+        // Return the results
+        resolve(result);
+      }
+    };
+    
+    executeTasks();
   },
   
   /**
@@ -1082,16 +1109,25 @@ const ImageUI = {
     // Create dropdown
     const dropdown = this._createFormatDropdown(image);
     
-    // Position it near the button
+    // Position it near the button using fixed positioning relative to viewport
     const btnRect = button.getBoundingClientRect();
     
-    dropdown.style.position = 'absolute';
+    dropdown.style.position = 'fixed';
     dropdown.style.left = `${btnRect.left}px`;
     dropdown.style.top = `${btnRect.bottom + 5}px`;
     dropdown.style.zIndex = '10001';
     
-    // Add to document body
+    // Ensure dropdown stays within viewport
     document.body.appendChild(dropdown);
+    
+    // Adjust position if dropdown goes off screen
+    const dropdownRect = dropdown.getBoundingClientRect();
+    if (dropdownRect.right > window.innerWidth) {
+      dropdown.style.left = `${window.innerWidth - dropdownRect.width - 10}px`;
+    }
+    if (dropdownRect.bottom > window.innerHeight) {
+      dropdown.style.top = `${btnRect.top - dropdownRect.height - 5}px`;
+    }
     
     // Close dropdown when clicking elsewhere
     const closeDropdown = (e) => {

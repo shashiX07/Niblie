@@ -1,313 +1,1906 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Viewport Word Counter - Options</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="options.css">
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Niblie - Smart Chrome Extension for enhanced browsing with ad blocking, word counting, and intelligent content analysis">
+    <meta name="keywords" content="Chrome Extension, Ad Blocker, Word Counter, Spotify Blocker, YouTube Blocker">
+    <title>Niblie - Smart Extension for Enhanced Browsing</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --accent: #f093fb;
+            --dark: #0a0a0f;
+            --darker: #050508;
+            --light: #ffffff;
+            --gray: #8b8b9a;
+            --neon: #00ffaa;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark);
+            color: var(--light);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        ::selection {
+            background: var(--primary);
+            color: var(--light);
+        }
+
+        /* Scroll Progress Indicator */
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+            z-index: 10000;
+            transition: width 0.1s ease;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.8);
+        }
+
+        /* Floating Particles */
+        .floating-particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0.6;
+            animation: floatParticle linear infinite;
+        }
+
+        @keyframes floatParticle {
+            0% {
+                transform: translateY(100vh) translateX(0) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100px) translateX(var(--drift)) scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* Magnetic Cursor Effect */
+        .cursor-follower {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transition: all 0.15s ease;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+        }
+
+        .cursor-follower.active {
+            opacity: 0.5;
+            transform: translate(-50%, -50%) scale(1.5);
+        }
+
+        /* Ripple Effect */
+        .ripple {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.4), transparent);
+            pointer-events: none;
+            z-index: 9997;
+            animation: rippleEffect 0.6s ease-out;
+        }
+
+        @keyframes rippleEffect {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            100% {
+                width: 300px;
+                height: 300px;
+                opacity: 0;
+            }
+        }
+
+        /* Cosmic Background */
+        .cosmic-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: radial-gradient(ellipse at top, #0a0a0f 0%, #050508 100%);
+        }
+
+        .aurora {
+            position: fixed;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            z-index: 1;
+            opacity: 0.03;
+            background: linear-gradient(45deg, transparent, var(--primary), transparent, var(--secondary), transparent);
+            animation: auroraShift 15s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes auroraShift {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.2); }
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background-image: 
+                linear-gradient(rgba(102, 126, 234, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(102, 126, 234, 0.02) 1px, transparent 1px);
+            background-size: 80px 80px;
+            pointer-events: none;
+            mask-image: radial-gradient(ellipse at center, black 0%, transparent 80%);
+        }
+
+        .glow-orb {
+            position: fixed;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            filter: blur(150px);
+            opacity: 0.2;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .glow-orb-1 {
+            background: var(--primary);
+            top: -300px;
+            right: -300px;
+            animation: float-1 30s infinite ease-in-out;
+        }
+
+        .glow-orb-2 {
+            background: var(--secondary);
+            bottom: -300px;
+            left: -300px;
+            animation: float-2 25s infinite ease-in-out;
+        }
+
+        @keyframes float-1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-150px, 150px) scale(1.1); }
+        }
+
+        @keyframes float-2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(150px, -150px) scale(1.1); }
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 30px 0;
+            z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        header.scrolled {
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+            padding: 20px 0;
+        }
+
+        nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--light);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 900;
+            font-size: 24px;
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .logo-icon-img {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+            transition: all 0.3s ease;
+            object-fit: cover;
+        }
+
+        .logo:hover .logo-icon {
+            transform: translateY(-3px) rotate(-5deg);
+            box-shadow: 0 5px 40px rgba(102, 126, 234, 0.7);
+        }
+
+        .logo:hover .logo-icon-img {
+            transform: translateY(-3px) rotate(-5deg);
+            box-shadow: 0 5px 40px rgba(102, 126, 234, 0.7);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 50px;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--gray);
+            font-weight: 500;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+            letter-spacing: 0.3px;
+        }
+
+        .nav-links a:not(.cta-btn):hover {
+            color: var(--light);
+        }
+
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:not(.cta-btn):hover::before {
+            width: 100%;
+        }
+
+        .cta-btn {
+            padding: 12px 28px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cta-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.6);
+        }
+
+        .cta-btn:hover::before {
+            left: 100%;
+        }
+
+        /* Hero Section - Unique Terminal Style */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 60px 80px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .hero-grid {
+            max-width: 1400px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .hero-content {
+            opacity: 0;
+            animation: slideInLeft 0.8s ease forwards 0.3s, breathe 4s ease-in-out infinite 1s;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 30px;
+            letter-spacing: 0.5px;
+        }
+
+        .hero-badge i {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .hero h1 {
+            font-size: 78px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 28px;
+            letter-spacing: -2px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            display: inline-block;
+        }
+
+        .gradient-text:hover {
+            animation: glitch 0.3s ease;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            25% { transform: translate(-2px, 2px); }
+            50% { transform: translate(2px, -2px); }
+            75% { transform: translate(-2px, -2px); }
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            color: var(--gray);
+            line-height: 1.7;
+            margin-bottom: 40px;
+            max-width: 600px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .btn-primary {
+            padding: 18px 38px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px);
+        }
+
+        /* Particle effect on buttons */
+        .btn-primary {
+            position: relative;
+            overflow: visible;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            animation: particleFloat 1s ease-out forwards;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) scale(0);
+            }
+        }
+
+        /* Download Modal */
+        .download-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .download-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(15, 15, 25, 0.95);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 10px;
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--light);
+            transform: rotate(90deg);
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .modal-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            margin-bottom: 20px;
+            animation: bounce 0.6s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .modal-header h2 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .modal-header p {
+            color: var(--gray);
+            font-size: 16px;
+        }
+
+        .download-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .download-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.05);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-option:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .download-option-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .download-option-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .download-option-text h4 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .download-option-text p {
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        .download-option-arrow {
+            font-size: 20px;
+            color: var(--primary);
+            transition: transform 0.3s ease;
+        }
+
+        .download-option:hover .download-option-arrow {
+            transform: translateX(5px);
+        }
+
+        .btn-secondary {
+            padding: 18px 38px;
+            background: transparent;
+            color: var(--light);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        /* Terminal Window */
+        .terminal-window {
+            background: rgba(15, 15, 25, 0.6);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            animation: slideInRight 0.8s ease forwards 0.5s;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+
+        .terminal-body {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .terminal-line {
+            display: flex;
+            margin-bottom: 12px;
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .terminal-line:nth-child(1) { animation-delay: 0.8s; }
+        .terminal-line:nth-child(2) { animation-delay: 1s; }
+        .terminal-line:nth-child(3) { animation-delay: 1.2s; }
+        .terminal-line:nth-child(4) { animation-delay: 1.4s; }
+        .terminal-line:nth-child(5) { animation-delay: 1.6s; }
+        .terminal-line:nth-child(6) { animation-delay: 1.8s; }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .terminal-prompt {
+            color: var(--primary);
+            margin-right: 10px;
+        }
+
+        .terminal-command {
+            color: var(--neon);
+        }
+
+        .terminal-comment {
+            color: var(--gray);
+        }
+
+        .terminal-output {
+            color: var(--light);
+            margin-left: 25px;
+        }
+
+        .terminal-success {
+            color: var(--neon);
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 18px;
+            background: var(--primary);
+            margin-left: 4px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Feature Showcase - Bento Grid */
+        .features {
+            padding: 120px 60px;
+            position: relative;
+            z-index: 10;
+            transform: translateZ(0);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .section-tag {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .section-header h2 {
+            font-size: 56px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        .section-header p {
+            font-size: 20px;
+            color: var(--gray);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .bento-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .bento-item {
+            background: rgba(15, 15, 25, 0.4);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .bento-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .bento-item:hover {
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.2);
+        }
+
+        .bento-item:hover::before {
+            transform: scaleX(1);
+        }
+
+        /* Interactive hover effect for bento items */
+        .bento-item {
+            cursor: pointer;
+        }
+
+        .bento-item::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(102, 126, 234, 0.1), transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            border-radius: 20px;
+        }
+
+        .bento-item:hover::after {
+            opacity: 1;
+        }
+
+        /* Floating Action Button */
+        .fab-container {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            z-index: 999;
+        }
+
+        .fab {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .fab:hover {
+            transform: scale(1.1) rotate(10deg);
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.7);
+        }
+
+        .fab-tooltip {
+            position: absolute;
+            right: 75px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(15, 15, 25, 0.95);
+            padding: 10px 15px;
+            border-radius: 8px;
+            white-space: nowrap;
+            font-size: 14px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .fab:hover .fab-tooltip {
+            opacity: 1;
+            right: 80px;
+        }
+
+        .bento-large {
+            grid-column: span 2;
+            grid-row: span 2;
+        }
+
+        .bento-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            animation: iconGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes iconGlow {
+            0%, 100% { box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); }
+            50% { box-shadow: 0 8px 40px rgba(102, 126, 234, 0.6), 0 0 60px rgba(102, 126, 234, 0.3); }
+        }
+
+        .bento-item h3 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .bento-item p {
+            color: var(--gray);
+            line-height: 1.7;
+            font-size: 16px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .stat-number {
+            animation: countUp 2s ease-out;
+        }
+
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Tech Stack Ticker */
+        .tech-stack {
+            padding: 60px 0;
+            position: relative;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        .ticker {
+            display: flex;
+            animation: scroll 30s linear infinite;
+            gap: 60px;
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .tech-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 30px;
+            background: rgba(15, 15, 25, 0.4);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            border-radius: 50px;
+            white-space: nowrap;
+        }
+
+        .tech-icon {
+            font-size: 24px;
+        }
+
+        .tech-name {
+            font-weight: 600;
+            color: var(--gray);
+        }
+
+        /* Footer */
+        footer {
+            padding: 80px 60px 40px;
+            position: relative;
+            z-index: 10;
+            border-top: 1px solid rgba(102, 126, 234, 0.1);
+            margin-top: 120px;
+        }
+
+        .footer-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr repeat(3, 1fr);
+            gap: 60px;
+            margin-bottom: 60px;
+        }
+
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .footer-logo-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .footer-brand h3 {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .footer-brand p {
+            color: var(--gray);
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-link {
+            width: 40px;
+            height: 40px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--light);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-color: transparent;
+            transform: translateY(-3px);
+        }
+
+        .footer-section h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--light);
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-links a {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+            padding-left: 5px;
+        }
+
+        .footer-bottom {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-top: 40px;
+            border-top: 1px solid rgba(102, 126, 234, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 60px;
+            }
+
+            .terminal-window {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .bento-large {
+                grid-column: span 1;
+                grid-row: span 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                padding: 0 30px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 120px 30px 60px;
+            }
+
+            .hero h1 {
+                font-size: 48px;
+            }
+
+            .features,
+            footer {
+                padding: 80px 30px 40px;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
 <body>
-  <div class="container">
-    <header>
-      <div class="logo-container">
-        <div class="logo">
-          <img src="icon48.png" alt="Viewport Word Counter Logo">
-          <h1>Niblie</h1>
-        </div>
-        <p class="tagline">Smart Page Analyzing for your browsing experience</p>
-      </div>
+    <!-- Scroll Progress -->
+    <div class="scroll-progress" id="scrollProgress"></div>
+
+    <!-- Magnetic Cursor -->
+    <div class="cursor-follower" id="cursorFollower"></div>
+
+    <!-- Cosmic Background -->
+    <div class="cosmic-bg"></div>
+    <div class="aurora"></div>
+    <div class="stars" id="stars"></div>
+    <div class="grid-overlay"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <div id="particlesContainer"></div>
+
+    <!-- Header -->
+    <header id="header">
+        <nav>
+            <a href="#" class="logo">
+                <img src="icon48.png" alt="Niblie Logo" class="logo-icon-img">
+                <span>Niblie</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="https://github.com/shashix07/Niblie/blob/main/README.md">Docs</a></li>
+                <li><a href="https://github.com/shashix07/Niblie">GitHub</a></li>
+                <li><a href="#" class="cta-btn" id="headerDownloadBtn">Download</a></li>
+            </ul>
+        </nav>
     </header>
 
-    <section class="card">
-      <div class="card-header">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M10 6H14V10H10V6ZM10 14H14V18H10V14ZM5 10C6.1 10 7 9.1 7 8C7 6.9 6.1 6 5 6C3.9 6 3 6.9 3 8C3 9.1 3.9 10 5 10ZM5 14C3.9 14 3 14.9 3 16C3 17.1 3.9 18 5 18C6.1 18 7 17.1 7 16C7 14.9 6.1 14 5 14ZM19 14C17.9 14 17 14.9 17 16C17 17.1 17.9 18 19 18C20.1 18 21 17.1 21 16C21 14.9 20.1 14 19 14ZM19 6C17.9 6 17 6.9 17 8C17 9.1 17.9 10 19 10C20.1 10 21 9.1 21 8C21 6.9 20.1 6 19 6Z"
-            fill="currentColor" />
-        </svg>
-        <h2>Badge Position</h2>
-      </div>
-      <div class="card-content">
-        <p>Choose where the word counter badge appears on webpages</p>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-grid">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-bolt"></i>
+                    v0.3.0 - Ultra Ad Blocker Included
+                </div>
+                <h1>
+                    Browse the web<br>
+                    <span class="gradient-text">without limits</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Niblie is a powerful Chrome extension that eliminates ads, analyzes content, 
+                    and supercharges your browsing experience with intelligent features.
+                </p>
+                <div class="hero-buttons">
+                    <button class="btn-primary" id="downloadBtn">
+                        <i class="fas fa-download"></i>
+                        Download Free
+                    </button>
+                    <a href="https://github.com/shashix07/Niblie" class="btn-secondary">
+                        <i class="fab fa-github"></i>
+                        View Source
+                    </a>
+                </div>
+            </div>
 
-        <div class="position-grid">
-          <button class="position-btn" data-position="top-left">
-            <span class="position-dot top-left"></span>
-          </button>
-          <button class="position-btn" data-position="top-center">
-            <span class="position-dot top-center"></span>
-          </button>
-          <button class="position-btn active" data-position="top-right">
-            <span class="position-dot top-right"></span>
-          </button>
-          <button class="position-btn" data-position="middle-left">
-            <span class="position-dot middle-left"></span>
-          </button>
-          <button class="position-btn" data-position="middle-center">
-            <span class="position-dot middle-center"></span>
-          </button>
-          <button class="position-btn" data-position="middle-right">
-            <span class="position-dot middle-right"></span>
-          </button>
-          <button class="position-btn" data-position="bottom-left">
-            <span class="position-dot bottom-left"></span>
-          </button>
-          <button class="position-btn" data-position="bottom-center">
-            <span class="position-dot bottom-center"></span>
-          </button>
-          <button class="position-btn" data-position="bottom-right">
-            <span class="position-dot bottom-right"></span>
-          </button>
+            <div class="terminal-window">
+                <div class="terminal-header">
+                    <span class="terminal-dot dot-red"></span>
+                    <span class="terminal-dot dot-yellow"></span>
+                    <span class="terminal-dot dot-green"></span>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">$</span>
+                        <span class="terminal-command">git clone github.com/shashix07/Niblie</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-output">Cloning into 'Niblie'...</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">$</span>
+                        <span class="terminal-command">chrome://extensions</span>
+                        <span class="terminal-comment">// Load unpacked</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-success"><i class="fas fa-check"></i> Extension loaded successfully</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-success"><i class="fas fa-check"></i> Spotify ads: BLOCKED</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-success"><i class="fas fa-check"></i> YouTube ads: ELIMINATED</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">$</span>
+                        <span class="cursor"></span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <p class="hint">You can also drag the badge to any position once it appears on a webpage.</p>
-      </div>
     </section>
 
-    <section class="card">
-      <div class="card-header">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M8 12L12 16L16 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round" />
-          <path d="M12 8V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-        <h2>Badge Style</h2>
-      </div>
-      <div class="card-content">
-        <p>Customize how the badge looks on your page</p>
-
-        <div class="option-group">
-          <div class="toggle-wrapper">
-            <label for="show-word-count">Show word count</label>
-            <label class="switch">
-              <input type="checkbox" id="show-word-count" checked>
-              <span class="slider round"></span>
-            </label>
-          </div>
-          <p class="hint">When disabled, an empty badge will be shown and word counting will be disabled for better
-            performance</p>
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="section-header">
+            <span class="section-tag">Features</span>
+            <h2>Everything you need,<br><span class="gradient-text">nothing you don't</span></h2>
+            <p>Built with obsessive attention to detail and performance</p>
         </div>
 
-        <div class="option-group">
-          <label>Color Style</label>
-          <div class="tab-control">
-            <button class="tab-btn active" data-tab="solid">Solid Color</button>
-            <button class="tab-btn" data-tab="gradient">Gradient</button>
-          </div>
+        <div class="bento-grid">
+            <div class="bento-item bento-large">
+                <div class="bento-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Ultra Ad Blocking</h3>
+                <p>Eliminate ads from Spotify and YouTube with military-grade precision. 
+                8 detection methods, 10 muting strategies, and 5 skip techniques working in perfect harmony.</p>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <span class="stat-number">8</span>
+                        <span class="stat-label">Detection Methods</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number">10</span>
+                        <span class="stat-label">Muting Strategies</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number">100%</span>
+                        <span class="stat-label">Block Rate</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number">0ms</span>
+                        <span class="stat-label">Detection Delay</span>
+                    </div>
+                </div>
+            </div>
 
-          <!-- Solid Color Options -->
-          <div id="solid-options" class="color-section">
-            <div class="color-field">
-              <label for="badge-color">Badge Color</label>
-              <div class="color-input-group">
-                <input type="color" id="badge-color" value="#4285f4">
-                <span class="color-value">#4285F4</span>
-              </div>
+            <div class="bento-item">
+                <div class="bento-icon">
+                    <i class="fas fa-text-width"></i>
+                </div>
+                <h3>Word Counter</h3>
+                <p>Real-time viewport word tracking with a draggable badge. Know exactly what you're reading.</p>
             </div>
-            <div class="color-field">
-              <label for="text-color">Text Color</label>
-              <div class="color-input-group">
-                <input type="color" id="text-color" value="#ffffff">
-                <span class="color-value">#FFFFFF</span>
-              </div>
-            </div>
-          </div>
 
-          <!-- Gradient Options -->
-          <div id="gradient-options" class="color-section" style="display: none;">
-            <div class="color-field">
-              <label for="gradient-start">Gradient Start</label>
-              <div class="color-input-group">
-                <input type="color" id="gradient-start" value="#4285f4">
-                <span class="color-value">#4285F4</span>
-              </div>
+            <div class="bento-item">
+                <div class="bento-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3>Content Analysis</h3>
+                <p>Extract links, images, videos, and tables from any webpage instantly.</p>
             </div>
-            <div class="color-field">
-              <label for="gradient-end">Gradient End</label>
-              <div class="color-input-group">
-                <input type="color" id="gradient-end" value="#0F9D58">
-                <span class="color-value">#0F9D58</span>
-              </div>
-            </div>
-            <div class="color-field">
-              <label for="gradient-angle">Gradient Angle</label>
-              <div class="slider-with-value wide">
-                <input type="range" id="gradient-angle" min="0" max="360" value="45" step="15">
-                <span class="range-value">45°</span>
-              </div>
-            </div>
-          </div>
 
-          <div class="color-field">
-            <label for="opacity-slider">Badge Transparency</label>
-            <div class="slider-with-value wide">
-              <input type="range" id="opacity-slider" min="10" max="100" value="90" step="10">
-              <span class="range-value">90%</span>
+            <div class="bento-item">
+                <div class="bento-icon">
+                    <i class="fas fa-fill-drip"></i>
+                </div>
+                <h3>Form Autofill</h3>
+                <p>Intelligent form completion for Google Forms and web applications.</p>
             </div>
-          </div>
+
+            <div class="bento-item">
+                <div class="bento-icon">
+                    <i class="fas fa-palette"></i>
+                </div>
+                <h3>Customizable</h3>
+                <p>Full control over colors, themes, positions, and animations.</p>
+            </div>
+
+            <div class="bento-item">
+                <div class="bento-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <h3>Privacy First</h3>
+                <p>Zero data collection. Everything stays on your device.</p>
+            </div>
         </div>
-
-        <div class="option-group">
-          <label>Badge Preview</label>
-          <div class="preview-container">
-            <div class="badge-preview">
-              123 words
-            </div>
-          </div>
-        </div>
-      </div>
     </section>
 
-    <!-- Add Cute Theme Options -->
-    <section class="card">
-      <div class="card-header">
-        <h2>Cute Theme</h2>
-      </div>
-      <div class="card-content">
-        <p>Add a fun, cute appearance to the word counter badge</p>
-
-        <div class="option-group">
-          <div class="toggle-wrapper">
-            <label for="use-cute-theme">Use cute theme</label>
-            <label class="switch">
-              <input type="checkbox" id="use-cute-theme" checked>
-              <span class="slider round"></span>
-            </label>
-          </div>
-        </div>
-
-        <div id="cute-theme-options">
-          <div class="option-group">
-            <label>Theme Style</label>
-            <div class="radio-group">
-              <label class="radio-label">
-                <input type="radio" name="cute-theme-style" value="kawaii" checked>
-                <span class="radio-custom"></span>
-                <span class="radio-text">Kawaii (Pink 📝)</span>
-              </label>
-              <label class="radio-label">
-                <input type="radio" name="cute-theme-style" value="pastel">
-                <span class="radio-custom"></span>
-                <span class="radio-text">Pastel (Blue ✏️)</span>
-              </label>
-              <label class="radio-label">
-                <input type="radio" name="cute-theme-style" value="bubbly">
-                <span class="radio-custom"></span>
-                <span class="radio-text">Bubbly (Mint 📚)</span>
-              </label>
+    <!-- Tech Stack Ticker -->
+    <section class="tech-stack">
+        <div class="ticker">
+            <div class="tech-item">
+                <i class="fab fa-chrome tech-icon"></i>
+                <span class="tech-name">Manifest V3</span>
             </div>
-          </div>
-
-          <div class="option-group">
-            <div class="toggle-wrapper" style="margin-top: 15px;">
-              <label for="enable-animations">Enable animations</label>
-              <label class="switch">
-                <input type="checkbox" id="enable-animations" checked>
-                <span class="slider round"></span>
-              </label>
+            <div class="tech-item">
+                <i class="fab fa-js tech-icon"></i>
+                <span class="tech-name">Vanilla JavaScript</span>
             </div>
-            <p class="hint">Periodically animates the badge to make it more engaging</p>
-          </div>
+            <div class="tech-item">
+                <i class="fas fa-bolt tech-icon"></i>
+                <span class="tech-name">Ultra Fast</span>
+            </div>
+            <div class="tech-item">
+                <i class="fas fa-shield-alt tech-icon"></i>
+                <span class="tech-name">CSP Compliant</span>
+            </div>
+            <div class="tech-item">
+                <i class="fas fa-cube tech-icon"></i>
+                <span class="tech-name">Modular Design</span>
+            </div>
+            <div class="tech-item">
+                <i class="fas fa-lock tech-icon"></i>
+                <span class="tech-name">Privacy Focused</span>
+            </div>
+            <!-- Duplicate for seamless loop -->
+            <div class="tech-item">
+                <i class="fab fa-chrome tech-icon"></i>
+                <span class="tech-name">Manifest V3</span>
+            </div>
+            <div class="tech-item">
+                <i class="fab fa-js tech-icon"></i>
+                <span class="tech-name">Vanilla JavaScript</span>
+            </div>
+            <div class="tech-item">
+                <i class="fas fa-bolt tech-icon"></i>
+                <span class="tech-name">Ultra Fast</span>
+            </div>
+            <div class="tech-item">
+                <i class="fas fa-shield-alt tech-icon"></i>
+                <span class="tech-name">CSP Compliant</span>
+            </div>
+            <div class="tech-item">
+                <i class="fas fa-cube tech-icon"></i>
+                <span class="tech-name">Modular Design</span>
+            </div>
+            <div class="tech-item">
+                <i class="fas fa-lock tech-icon"></i>
+                <span class="tech-name">Privacy Focused</span>
+            </div>
         </div>
-      </div>
-    </section>
-    <section class="card">
-      <div class="card-header">
-        <h2>Form Autofill</h2>
-      </div>
-      <div class="card-content">
-        <p>Define field names and values you'd like to auto-fill in forms (Google Forms, university forms, etc.)</p>
-
-        <div id="autofill-list" class="autofill-list"></div>
-
-        <button id="add-autofill-field" class="btn btn-primary" style="margin-top: 1rem;">Add Field</button>
-      </div>
     </section>
 
+    <!-- Download Modal -->
+    <div class="download-modal" id="downloadModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <h2>Get Niblie</h2>
+                <p>Choose your preferred installation method</p>
+            </div>
+            <div class="download-options">
+                <a href="https://github.com/shashix07/Niblie/releases/latest" class="download-option" target="_blank">
+                    <div class="download-option-info">
+                        <div class="download-option-icon">
+                            <i class="fab fa-github"></i>
+                        </div>
+                        <div class="download-option-text">
+                            <h4>GitHub Release</h4>
+                            <p>Download the latest stable version (v0.5.0)</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-arrow-right download-option-arrow"></i>
+                </a>
+                <a href="https://github.com/shashix07/Niblie/archive/refs/heads/main.zip" class="download-option" target="_blank">
+                    <div class="download-option-info">
+                        <div class="download-option-icon">
+                            <i class="fas fa-code-branch"></i>
+                        </div>
+                        <div class="download-option-text">
+                            <h4>Source Code</h4>
+                            <p>Download the complete source from main branch</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-arrow-right download-option-arrow"></i>
+                </a>
+                <a href="https://github.com/shashix07/Niblie" class="download-option" target="_blank">
+                    <div class="download-option-info">
+                        <div class="download-option-icon">
+                            <i class="fas fa-terminal"></i>
+                        </div>
+                        <div class="download-option-text">
+                            <h4>Clone Repository</h4>
+                            <p>git clone github.com/shashix07/Niblie</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-arrow-right download-option-arrow"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="fab-container">
+        <button class="fab" id="fabBtn">
+            <i class="fas fa-rocket"></i>
+            <span class="fab-tooltip">Quick Download</span>
+        </button>
+    </div>
+
+    <!-- Footer -->
     <footer>
-      <button id="save-btn" class="btn btn-primary">Save Settings</button>
-      <span id="status-message"></span>
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="footer-logo">
+                    <img src="icon48.png" alt="Niblie Logo" class="footer-logo-img">
+                    <h3>Niblie</h3>
+                </div>
+                <p>A powerful Chrome extension that blocks ads, analyzes content, and enhances your browsing experience.</p>
+                <div class="social-links">
+                    <a href="https://github.com/shashix07/Niblie" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="https://github.com/shashix07/Niblie/issues" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="Report Issues">
+                        <i class="fas fa-bug"></i>
+                    </a>
+                    <a href="https://github.com/shashix07/Niblie/discussions" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="Community Discussions">
+                        <i class="fas fa-comments"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h4>Product</h4>
+                <ul class="footer-links">
+                    <li><a href="#features" target="_self">Features</a></li>
+                    <li><a href="https://github.com/shashix07/Niblie/releases" target="_blank" rel="noopener noreferrer">Download</a></li>
+                    <li><a href="https://github.com/shashix07/Niblie/blob/main/README.md" target="_blank" rel="noopener noreferrer">Documentation</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul class="footer-links">
+                    <li><a href="https://github.com/shashix07/Niblie" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+                    <li><a href="https://github.com/shashix07/Niblie/blob/main/ARCHITECTURE.md" target="_blank" rel="noopener noreferrer">Architecture</a></li>
+                    <li><a href="https://github.com/shashix07/Niblie/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="https://github.com/shashix07/Niblie/issues" target="_blank" rel="noopener noreferrer">Report Bug</a></li>
+                    <li><a href="https://github.com/shashix07/Niblie/discussions" target="_blank" rel="noopener noreferrer">Community</a></li>
+                    <li><a href="https://github.com/shashix07/Niblie/releases" target="_blank" rel="noopener noreferrer">Changelog</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2025 Niblie. Open source and privacy-focused.</p>
+            <p>Built by <a href="https://github.com/shashix07" style="color: var(--primary);">@shashix07</a></p>
+        </div>
     </footer>
-  </div>
-  <script src="options.js"></script>
+
+    <script>
+        // Generate stars
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 100; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            starsContainer.appendChild(star);
+        }
+
+        // Scroll progress indicator
+        const scrollProgress = document.getElementById('scrollProgress');
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            scrollProgress.style.width = scrollPercent + '%';
+        });
+
+        // Header scroll effect
+        const header = document.getElementById('header');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Download Modal Logic
+        const downloadModal = document.getElementById('downloadModal');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const headerDownloadBtn = document.getElementById('headerDownloadBtn');
+        const fabBtn = document.getElementById('fabBtn');
+        const closeModal = document.getElementById('closeModal');
+
+        function openModal() {
+            downloadModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModalFunc() {
+            downloadModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        downloadBtn.addEventListener('click', openModal);
+        headerDownloadBtn.addEventListener('click', openModal);
+        fabBtn.addEventListener('click', openModal);
+        closeModal.addEventListener('click', closeModalFunc);
+
+        // Close modal on outside click
+        downloadModal.addEventListener('click', (e) => {
+            if (e.target === downloadModal) {
+                closeModalFunc();
+            }
+        });
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && downloadModal.classList.contains('active')) {
+                closeModalFunc();
+            }
+        });
+
+        // Particle effect on button hover
+        function createParticle(x, y) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 50 + Math.random() * 50;
+            particle.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+            particle.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            document.body.appendChild(particle);
+            setTimeout(() => particle.remove(), 1000);
+        }
+
+        document.querySelectorAll('.btn-primary').forEach(btn => {
+            btn.addEventListener('mouseenter', (e) => {
+                const rect = btn.getBoundingClientRect();
+                for (let i = 0; i < 8; i++) {
+                    setTimeout(() => {
+                        createParticle(
+                            rect.left + Math.random() * rect.width,
+                            rect.top + Math.random() * rect.height
+                        );
+                    }, i * 50);
+                }
+            });
+        });
+
+        // Mouse follow effect on bento items
+        document.querySelectorAll('.bento-item').forEach(item => {
+            item.addEventListener('mousemove', (e) => {
+                const rect = item.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                item.style.setProperty('--mouse-x', x + '%');
+                item.style.setProperty('--mouse-y', y + '%');
+            });
+        });
+
+        // Intersection Observer for scroll animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                    
+                    // Animate stat numbers
+                    if (entry.target.classList.contains('bento-large')) {
+                        entry.target.querySelectorAll('.stat-number').forEach(stat => {
+                            const text = stat.textContent;
+                            if (text.includes('%')) {
+                                animateValue(stat, 0, 100, 2000, '%');
+                            } else if (text.includes('ms')) {
+                                stat.textContent = '0ms';
+                            } else {
+                                const num = parseInt(text);
+                                animateValue(stat, 0, num, 2000, '');
+                            }
+                        });
+                    }
+                }
+            });
+        }, { threshold: 0.1 });
+
+        // Animate counter function
+        function animateValue(element, start, end, duration, suffix) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                element.textContent = Math.floor(progress * (end - start) + start) + suffix;
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        document.querySelectorAll('.bento-item').forEach((el, i) => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = `all 0.6s ease ${i * 0.1}s`;
+            observer.observe(el);
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Show/hide FAB based on scroll
+        let lastScroll = 0;
+        const fabContainer = document.querySelector('.fab-container');
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.scrollY;
+            if (currentScroll > 500) {
+                fabContainer.style.opacity = '1';
+                fabContainer.style.transform = 'translateY(0)';
+            } else {
+                fabContainer.style.opacity = '0';
+                fabContainer.style.transform = 'translateY(20px)';
+            }
+            lastScroll = currentScroll;
+        });
+
+        // Initial FAB state
+        fabContainer.style.opacity = '0';
+        fabContainer.style.transform = 'translateY(20px)';
+        fabContainer.style.transition = 'all 0.3s ease';
+
+        // Floating Particles Animation
+        function createFloatingParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'floating-particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.setProperty('--drift', (Math.random() - 0.5) * 200 + 'px');
+            particle.style.animationDuration = (Math.random() * 3 + 4) + 's';
+            document.getElementById('particlesContainer').appendChild(particle);
+            
+            setTimeout(() => particle.remove(), 7000);
+        }
+
+        setInterval(createFloatingParticle, 300);
+
+        // Magnetic Cursor Effect
+        const cursorFollower = document.getElementById('cursorFollower');
+        let cursorX = 0, cursorY = 0;
+        let followerX = 0, followerY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            cursorX = e.clientX;
+            cursorY = e.clientY;
+        });
+
+        function animateCursor() {
+            const distX = cursorX - followerX;
+            const distY = cursorY - followerY;
+            
+            followerX += distX * 0.1;
+            followerY += distY * 0.1;
+            
+            cursorFollower.style.left = followerX + 'px';
+            cursorFollower.style.top = followerY + 'px';
+            
+            requestAnimationFrame(animateCursor);
+        }
+
+        animateCursor();
+
+        // Show cursor follower on mouse move
+        document.addEventListener('mousemove', () => {
+            cursorFollower.style.opacity = '0.5';
+        });
+
+        // Ripple Effect on Click
+        document.addEventListener('click', (e) => {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            ripple.style.left = e.clientX + 'px';
+            ripple.style.top = e.clientY + 'px';
+            ripple.style.transform = 'translate(-50%, -50%)';
+            document.body.appendChild(ripple);
+            
+            setTimeout(() => ripple.remove(), 600);
+        });
+
+        // 3D Tilt Effect on Bento Items
+        document.querySelectorAll('.bento-item').forEach(item => {
+            item.addEventListener('mousemove', (e) => {
+                const rect = item.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 10;
+                const rotateY = (centerX - x) / 10;
+                
+                item.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
+            });
+            
+            item.addEventListener('mouseleave', () => {
+                item.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
+            });
+        });
+
+        // Parallax Effect on Scroll
+        window.addEventListener('scroll', () => {
+            const scrolled = window.scrollY;
+            const aurora = document.querySelector('.aurora');
+            if (aurora) {
+                aurora.style.transform = `rotate(${scrolled * 0.1}deg) scale(${1 + scrolled * 0.0001})`;
+            }
+            
+            // Parallax for glow orbs
+            const orb1 = document.querySelector('.glow-orb-1');
+            const orb2 = document.querySelector('.glow-orb-2');
+            if (orb1) orb1.style.transform = `translate(${-scrolled * 0.1}px, ${scrolled * 0.2}px)`;
+            if (orb2) orb2.style.transform = `translate(${scrolled * 0.1}px, ${-scrolled * 0.2}px)`;
+        });
+
+        // Interactive hover on buttons
+        document.querySelectorAll('.btn-primary, .btn-secondary, .cta-btn').forEach(btn => {
+            btn.addEventListener('mouseenter', () => {
+                cursorFollower.classList.add('active');
+            });
+            
+            btn.addEventListener('mouseleave', () => {
+                cursorFollower.classList.remove('active');
+            });
+        });
+
+        // Add subtle rotation to logo on hover
+        const logoIcon = document.querySelector('.logo-icon');
+        if (logoIcon) {
+            logoIcon.addEventListener('mouseenter', () => {
+                logoIcon.style.animation = 'none';
+                setTimeout(() => {
+                    logoIcon.style.animation = '';
+                }, 10);
+            });
+        }
+    </script>
 </body>
-
 </html>
-
-<style>
-  /* Radio button styles for theme selection */
-  .radio-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin: 10px 0;
-  }
-
-  .radio-label {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .radio-label input {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-  }
-
-  .radio-custom {
-    position: relative;
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    background-color: #f1f3f4;
-    border-radius: 50%;
-    margin-right: 10px;
-  }
-
-  .radio-label:hover .radio-custom {
-    background-color: #e8eaed;
-  }
-
-  .radio-label input:checked+.radio-custom:after {
-    content: '';
-    position: absolute;
-    top: 4px;
-    left: 4px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #1a73e8;
-  }
-
-  .radio-text {
-    font-size: 14px;
-  }
-
-  /* Theme preview styles */
-  .badge-preview.kawaii {
-    background-color: #FF86C8;
-    font-family: 'Comic Sans MS', 'Marker Felt', Arial, sans-serif;
-    border: 2px solid #ffffff;
-  }
-
-  .badge-preview.pastel {
-    background-color: #A5DEF1;
-    font-family: 'Quicksand', 'Varela Round', sans-serif;
-    border: 2px solid #ffffff;
-  }
-
-  .badge-preview.bubbly {
-    background-color: #9ED9CC;
-    font-family: 'Baloo 2', 'Comic Sans MS', sans-serif;
-    border: 2px solid #ffffff;
-  }
-</style>

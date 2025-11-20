@@ -2,6 +2,96 @@
  * Options page for Viewport Word Counter
  */
 
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Niblie Settings Page Loaded');
+  
+  // Tab switching functionality
+  const tabLinks = document.querySelectorAll('.tab-link');
+  const tabContents = document.querySelectorAll('.tab-content');
+  
+  console.log('Found', tabLinks.length, 'tab links');
+  console.log('Found', tabContents.length, 'tab contents');
+  
+  tabLinks.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      console.log('Tab clicked:', this.getAttribute('data-tab'));
+      
+      // Remove active class from all links
+      tabLinks.forEach(function(l) {
+        l.classList.remove('active');
+      });
+      
+      // Remove active class from all content sections
+      tabContents.forEach(function(c) {
+        c.classList.remove('active');
+      });
+      
+      // Add active to clicked link
+      this.classList.add('active');
+      
+      // Show corresponding content
+      const tabId = this.getAttribute('data-tab');
+      const targetContent = document.getElementById(tabId);
+      
+      if (targetContent) {
+        targetContent.classList.add('active');
+        console.log('Activated tab:', tabId);
+      } else {
+        console.error('Tab content not found:', tabId);
+      }
+    });
+  });
+
+  // Color style tabs (Solid/Gradient)
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const parent = this.closest('.card');
+      parent.querySelectorAll('.tab-btn').forEach(function(b) {
+        b.classList.remove('active');
+      });
+      this.classList.add('active');
+      
+      const tab = this.getAttribute('data-tab');
+      const solidOptions = parent.querySelector('#solid-options');
+      const gradientOptions = parent.querySelector('#gradient-options');
+      
+      if (tab === 'solid') {
+        if (solidOptions) solidOptions.style.display = 'block';
+        if (gradientOptions) gradientOptions.style.display = 'none';
+      } else {
+        if (solidOptions) solidOptions.style.display = 'none';
+        if (gradientOptions) gradientOptions.style.display = 'block';
+      }
+    });
+  });
+
+  // Color value updates
+  document.querySelectorAll('input[type="color"]').forEach(function(input) {
+    input.addEventListener('input', function() {
+      const valueSpan = this.nextElementSibling;
+      if (valueSpan && valueSpan.classList.contains('color-value')) {
+        valueSpan.textContent = this.value.toUpperCase();
+      }
+    });
+  });
+
+  // Range value updates
+  document.querySelectorAll('input[type="range"]').forEach(function(input) {
+    input.addEventListener('input', function() {
+      const valueSpan = this.parentElement.querySelector('.range-value');
+      if (valueSpan) {
+        if (this.id === 'gradient-angle') {
+          valueSpan.textContent = this.value + '°';
+        } else {
+          valueSpan.textContent = this.value + '%';
+        }
+      }
+    });
+  });
+});
+
 // Default settings
 const autofillList = document.getElementById("autofill-list");
 const addFieldBtn = document.getElementById("add-autofill-field");
@@ -11,11 +101,11 @@ function renderAutofillFields(fields = []) {
 
   fields.forEach((pair, index) => {
     const wrapper = document.createElement("div");
-    wrapper.className = "autofill-field";
+    wrapper.className = "autofill-item";
 
     const keyInput = document.createElement("input");
     keyInput.type = "text";
-    keyInput.placeholder = "Field label (e.g., Name)";
+    keyInput.placeholder = "Field name (e.g., Name, Email)";
     keyInput.value = pair.key;
 
     const valueInput = document.createElement("input");
@@ -24,8 +114,8 @@ function renderAutofillFields(fields = []) {
     valueInput.value = pair.value;
 
     const removeBtn = document.createElement("button");
-    removeBtn.textContent = "✖";
-    removeBtn.className = "remove-field";
+    removeBtn.textContent = "Remove";
+    removeBtn.className = "remove-btn";
     removeBtn.onclick = () => {
       fields.splice(index, 1);
       renderAutofillFields(fields);
@@ -299,6 +389,12 @@ enableAnimationsCheckbox.addEventListener("change", updateBadgePreview);
 
 // Save settings
 saveButton.addEventListener("click", () => {
+  // Get advanced feature checkboxes
+  const performanceMonitorCheckbox = document.getElementById('enable-performance-monitor');
+  const errorTrackingCheckbox = document.getElementById('enable-error-tracking');
+  const analyticsCheckbox = document.getElementById('enable-analytics');
+  const debugModeCheckbox = document.getElementById('enable-debug-mode');
+  
   // Get current settings
   const settings = {
     position: document.querySelector(".position-btn.active").dataset.position,
@@ -315,6 +411,11 @@ saveButton.addEventListener("click", () => {
       (radio) => radio.checked
     ).value,
     enableAnimations: enableAnimationsCheckbox.checked,
+    // Advanced features
+    enablePerformanceMonitor: performanceMonitorCheckbox ? performanceMonitorCheckbox.checked : false,
+    enableErrorTracking: errorTrackingCheckbox ? errorTrackingCheckbox.checked : true,
+    enableAnalytics: analyticsCheckbox ? analyticsCheckbox.checked : false,
+    enableDebugMode: debugModeCheckbox ? debugModeCheckbox.checked : false
   };
 
   // Save to storage
@@ -337,6 +438,25 @@ const loadSettings = () => {
       .querySelector(`.position-btn[data-position="${settings.position}"]`)
       .classList.add("active");
     showWordCount.checked = settings.showWordCount;
+    
+    // Load advanced feature settings
+    const performanceMonitorCheckbox = document.getElementById('enable-performance-monitor');
+    const errorTrackingCheckbox = document.getElementById('enable-error-tracking');
+    const analyticsCheckbox = document.getElementById('enable-analytics');
+    const debugModeCheckbox = document.getElementById('enable-debug-mode');
+    
+    if (performanceMonitorCheckbox) {
+      performanceMonitorCheckbox.checked = settings.enablePerformanceMonitor !== false;
+    }
+    if (errorTrackingCheckbox) {
+      errorTrackingCheckbox.checked = settings.enableErrorTracking !== false;
+    }
+    if (analyticsCheckbox) {
+      analyticsCheckbox.checked = settings.enableAnalytics || false;
+    }
+    if (debugModeCheckbox) {
+      debugModeCheckbox.checked = settings.enableDebugMode || false;
+    }
 
     if (settings.colorStyle === "gradient") {
       document.querySelector('.tab-btn[data-tab="gradient"]').click();

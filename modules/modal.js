@@ -175,10 +175,32 @@ const ModalUI = {
       this._loadSection('tables');
     });
     
+    const adBlockerItem = document.createElement('a');
+    adBlockerItem.className = 'niblie-nav-item';
+    adBlockerItem.textContent = 'Ad Blockers';
+    adBlockerItem.href = '#';
+    adBlockerItem.dataset.section = 'adblockers';
+    adBlockerItem.style.cssText = `
+      display: block;
+      padding: 12px 20px;
+      color: #5f6368;
+      text-decoration: none;
+      font-weight: 400;
+      margin-bottom: 5px;
+      border-left: 4px solid transparent;
+      transition: all 0.2s;
+    `;
+
+    adBlockerItem.addEventListener('click', (e) => {
+      e.preventDefault();
+      this._loadSection('adblockers');
+    });
+    
     navItems.appendChild(linksItem);
     navItems.appendChild(imagesItem);
     navItems.appendChild(videosItem);
     navItems.appendChild(tablesItem);
+    navItems.appendChild(adBlockerItem);
     sidebar.appendChild(navItems);
     
     // Create main content area
@@ -363,9 +385,25 @@ const ModalUI = {
     `;
 
     settingsButton.title = "Settings";
-    settingsButton.addEventListener("click", () => {
-      const settingURL = "https://shashix07.github.io/Niblie/";
-      window.location.href = settingURL;
+    settingsButton.addEventListener("click", async () => {
+      try {
+        // Try to get stored extension ID
+        chrome.storage.local.get(['extensionId', 'optionsUrl'], (data) => {
+          if (data.optionsUrl) {
+            // Open options page in new tab
+            chrome.runtime.sendMessage({ action: 'openOptions' });
+          } else {
+            // Fallback: construct URL using runtime ID
+            const extensionId = chrome.runtime.id;
+            const optionsUrl = `chrome-extension://${extensionId}/settings.html`;
+            chrome.runtime.sendMessage({ action: 'openOptions' });
+          }
+        });
+      } catch (error) {
+        console.error('[Niblie] Error opening settings:', error);
+        // Fallback to opening options page
+        chrome.runtime.sendMessage({ action: 'openOptions' });
+      }
     })
 
     settingsButton.style.cssText = `
@@ -409,9 +447,7 @@ const ModalUI = {
     
     settingsButton.addEventListener('click', (e) => {
       e.preventDefault();
-      if (typeof this._showSettingsView === 'function') {
-        this._showSettingsView();
-      }
+      chrome.runtime.sendMessage({ action: 'openOptions' });
     });
     
     // Add hover effects for buttons
@@ -855,9 +891,7 @@ const ModalUI = {
     
     settingsButton.addEventListener('click', (e) => {
       e.preventDefault();
-      if (typeof this._showSettingsView === 'function') {
-        this._showSettingsView();
-      }
+      chrome.runtime.sendMessage({ action: 'openOptions' });
     });
     
     // Add hover effects
@@ -1004,9 +1038,7 @@ const ModalUI = {
     
     settingsButton.addEventListener('click', (e) => {
       e.preventDefault();
-      if (typeof this._showSettingsView === 'function') {
-        this._showSettingsView();
-      }
+      chrome.runtime.sendMessage({ action: 'openOptions' });
     });
     
     // Add hover effects
@@ -1227,9 +1259,7 @@ const ModalUI = {
     
     settingsButton.addEventListener('click', (e) => {
       e.preventDefault();
-      if (typeof this._showSettingsView === 'function') {
-        this._showSettingsView();
-      }
+      chrome.runtime.sendMessage({ action: 'openOptions' });
     });
     
     // Add hover effects
@@ -1603,6 +1633,313 @@ const ModalUI = {
 },
 
 /**
+ * Load Ad Blockers section
+ */
+loadAdBlockersSection: function() {
+  // Update navigation state
+  this._updateSidebarNavigation('adblockers');
+  
+  // Get main content area
+  const mainContent = document.querySelector('.niblie-main-content');
+  if (!mainContent) return;
+  
+  // Clear existing content
+  mainContent.innerHTML = '';
+  
+  // Create header
+  const contentHeader = document.createElement('div');
+  contentHeader.className = 'niblie-content-header';
+  contentHeader.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e4e8ed;
+  `;
+  
+  const sectionTitle = document.createElement('h2');
+  sectionTitle.textContent = 'Ad Blocker Controls';
+  sectionTitle.style.cssText = `
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+  `;
+  
+  contentHeader.appendChild(sectionTitle);
+  mainContent.appendChild(contentHeader);
+  
+  // Create content container
+  const contentContainer = document.createElement('div');
+  contentContainer.className = 'niblie-adblocker-content';
+  contentContainer.style.cssText = `
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  `;
+  
+  // Load current settings
+  chrome.storage.sync.get(['youtubeAdBlockerEnabled', 'spotifyAdBlockerEnabled'], (result) => {
+    const youtubeEnabled = result.youtubeAdBlockerEnabled !== false;
+    const spotifyEnabled = result.spotifyAdBlockerEnabled !== false;
+    
+    // YouTube Ad Blocker Card
+    const youtubeCard = this._createAdBlockerCard(
+      'YouTube Ad Blocker',
+      'Automatically removes, skips, and fast-forwards YouTube ads. Blocks banner ads, video ads, and promoted content.',
+      youtubeEnabled,
+      'youtubeAdBlockerEnabled'
+    );
+    
+    // Spotify Ad Blocker Card
+    const spotifyCard = this._createAdBlockerCard(
+      'Spotify Ad Blocker',
+      'Mutes and fast-forwards Spotify ads. Removes banner ads and audio advertisements on Spotify Web Player.',
+      spotifyEnabled,
+      'spotifyAdBlockerEnabled'
+    );
+    
+    contentContainer.appendChild(youtubeCard);
+    contentContainer.appendChild(spotifyCard);
+    
+    // Add info note
+    const infoNote = document.createElement('div');
+    infoNote.style.cssText = `
+      background-color: #e8f0fe;
+      border-left: 4px solid #4285f4;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 10px;
+    `;
+    infoNote.innerHTML = `
+      <strong style="color: #1967d2;">ℹ️ Important Notes:</strong>
+      <ul style="margin: 10px 0 0 20px; color: #202124;">
+        <li>Ad blockers only work on <strong>YouTube.com</strong> and <strong>Spotify Web Player</strong></li>
+        <li>Changes take effect immediately - no page reload required</li>
+        <li>YouTube: Skips video ads, removes banner ads and promoted videos</li>
+        <li>Spotify: Mutes ads, fast-forwards through them, and removes banner ads</li>
+        <li>These ad blockers respect content creators while improving your experience</li>
+      </ul>
+    `;
+    contentContainer.appendChild(infoNote);
+  });
+  
+  mainContent.appendChild(contentContainer);
+},
+
+/**
+ * Create an ad blocker control card
+ * @param {string} title - Card title
+ * @param {string} description - Card description
+ * @param {boolean} enabled - Whether the blocker is enabled
+ * @param {string} settingKey - Storage key for this setting
+ * @param {string} emoji - Emoji icon
+ * @returns {HTMLElement} Card element
+ */
+_createAdBlockerCard: function(title, description, enabled, settingKey, emoji) {
+  const card = document.createElement('div');
+  card.className = 'niblie-adblocker-card';
+  card.style.cssText = `
+    background-color: #f8f9fa;
+    border: 1px solid #e4e8ed;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+  `;
+  
+  // Left side: Icon, title, and description
+  const leftSide = document.createElement('div');
+  leftSide.style.cssText = `
+    flex: 1;
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+  `;
+  
+  const iconContainer = document.createElement('div');
+  iconContainer.style.cssText = `
+    font-size: 32px;
+    line-height: 1;
+  `;
+  iconContainer.textContent = emoji;
+  
+  const textContainer = document.createElement('div');
+  textContainer.style.cssText = `
+    flex: 1;
+  `;
+  
+  const titleEl = document.createElement('h3');
+  titleEl.textContent = title;
+  titleEl.style.cssText = `
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #202124;
+  `;
+  
+  const descEl = document.createElement('p');
+  descEl.textContent = description;
+  descEl.style.cssText = `
+    margin: 0;
+    font-size: 13px;
+    color: #5f6368;
+    line-height: 1.5;
+  `;
+  
+  textContainer.appendChild(titleEl);
+  textContainer.appendChild(descEl);
+  leftSide.appendChild(iconContainer);
+  leftSide.appendChild(textContainer);
+  
+  // Right side: Toggle switch
+  const toggleContainer = document.createElement('div');
+  toggleContainer.style.cssText = `
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  `;
+  
+  const statusText = document.createElement('span');
+  statusText.style.cssText = `
+    font-size: 13px;
+    font-weight: 500;
+    color: ${enabled ? '#34a853' : '#5f6368'};
+    min-width: 60px;
+  `;
+  statusText.textContent = enabled ? 'Enabled' : 'Disabled';
+  
+  const toggleSwitch = document.createElement('label');
+  toggleSwitch.style.cssText = `
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+    cursor: pointer;
+  `;
+  
+  const toggleInput = document.createElement('input');
+  toggleInput.type = 'checkbox';
+  toggleInput.checked = enabled;
+  toggleInput.style.cssText = `
+    opacity: 0;
+    width: 0;
+    height: 0;
+  `;
+  
+  const slider = document.createElement('span');
+  slider.style.cssText = `
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: ${enabled ? '#34a853' : '#ccc'};
+    transition: 0.3s;
+    border-radius: 24px;
+  `;
+  
+  const sliderButton = document.createElement('span');
+  sliderButton.style.cssText = `
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: ${enabled ? '27px' : '3px'};
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+  `;
+  
+  slider.appendChild(sliderButton);
+  toggleSwitch.appendChild(toggleInput);
+  toggleSwitch.appendChild(slider);
+  
+  // Toggle event handler
+  toggleInput.addEventListener('change', () => {
+    const isEnabled = toggleInput.checked;
+    
+    // Update UI immediately
+    slider.style.backgroundColor = isEnabled ? '#34a853' : '#ccc';
+    sliderButton.style.left = isEnabled ? '27px' : '3px';
+    statusText.textContent = isEnabled ? 'Enabled' : 'Disabled';
+    statusText.style.color = isEnabled ? '#34a853' : '#5f6368';
+    
+    // Save to storage
+    const setting = {};
+    setting[settingKey] = isEnabled;
+    chrome.storage.sync.set(setting, () => {
+      console.log(`[Niblie] ${title} ${isEnabled ? 'enabled' : 'disabled'}`);
+      
+      // Show notification
+      this._showAdBlockerNotification(
+        isEnabled ? `${title} Enabled` : `${title} Disabled`,
+        isEnabled ? 'Ad blocking is now active' : 'Ad blocking is now inactive'
+      );
+    });
+  });
+  
+  toggleContainer.appendChild(statusText);
+  toggleContainer.appendChild(toggleSwitch);
+  
+  card.appendChild(leftSide);
+  card.appendChild(toggleContainer);
+  
+  return card;
+},
+
+/**
+ * Show notification for ad blocker changes
+ * @param {string} title - Notification title
+ * @param {string} message - Notification message
+ */
+_showAdBlockerNotification: function(title, message) {
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #202124;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 10002;
+    min-width: 250px;
+    opacity: 0;
+    transform: translateX(20px);
+    transition: all 0.3s ease;
+  `;
+  
+  notification.innerHTML = `
+    <div style="font-weight: 500; margin-bottom: 5px;">${title}</div>
+    <div style="font-size: 13px; opacity: 0.9;">${message}</div>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Animate in
+  setTimeout(() => {
+    notification.style.opacity = '1';
+    notification.style.transform = 'translateX(0)';
+  }, 10);
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    notification.style.transform = 'translateX(20px)';
+    setTimeout(() => {
+      notification.remove();
+    }, 300);
+  }, 3000);
+},
+
+/**
  * Load a specific section of the modal
  * @param {string} section - Section name to load
  * @param {boolean} forceRefresh - Whether to force refreshing data
@@ -1627,6 +1964,9 @@ _loadSection: function(section, forceRefresh = false) {
       break;
     case 'tables':
       this.loadTablesSection(forceRefresh);
+      break;
+    case 'adblockers':
+      this.loadAdBlockersSection();
       break;
     default:
       console.warn(`Unknown section: ${section}`);

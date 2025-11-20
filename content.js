@@ -5,41 +5,55 @@
 
 // Update word count when scrolling or on DOM mutations
 const updateWordCount = () => {
-  // Check if we need to run word counting
-  chrome.storage.sync.get('settings', (data) => {
-    const settings = data.settings || { showWordCount: true };
-    
-    // Skip counting if disabled
-    if (!settings.showWordCount) {
+  try {
+    // Check WordCounter enabled state
+    if (typeof WordCounter !== 'undefined') {
+      // WordCounter.countWords() already checks isEnabled internally
+      const count = WordCounter.countWords();
+      
+      // Update the badge
       if (typeof BadgeUI !== 'undefined') {
-        BadgeUI.updateBadge(0);
+        BadgeUI.updateBadge(count);
       }
+    }
+  } catch (error) {
+    console.error('[Niblie] Error in updateWordCount:', error);
+  }
+};
+
+// Initialize the word counter with error handling
+const initWordCounter = async () => {
+  try {
+    console.log('[Niblie] Initializing WordCounter');
+    
+    // Check if required modules are loaded
+    if (typeof BadgeUI === 'undefined') {
+      console.error('[Niblie] BadgeUI module not found');
       return;
     }
     
-    // Get the viewport text and count words
-    const count = WordCounter.countWords();
-    
-    // Update the badge
-    if (typeof BadgeUI !== 'undefined') {
-      BadgeUI.updateBadge(count);
+    if (typeof WordCounter === 'undefined') {
+      console.error('[Niblie] WordCounter module not found');
+      return;
     }
-  });
-};
-
-// Initialize the word counter
-const initWordCounter = () => {
-  console.log('Initializing WordCounter');
-  
-  // Initialize BadgeUI with settings
-  if (typeof BadgeUI !== 'undefined') {
+    
+    // Initialize WordCounter with settings first
+    if (WordCounter.init) {
+      await WordCounter.init();
+    }
+    
+    // Initialize BadgeUI with settings
     BadgeUI.init().then(() => {
       // Initial count
       performWordCount();
       
       // Set up event listeners based on settings
       setupWordCountListeners();
+    }).catch(error => {
+      console.error('[Niblie] BadgeUI initialization failed:', error);
     });
+  } catch (error) {
+    console.error('[Niblie] WordCounter initialization error:', error);
   }
 };
 
@@ -90,18 +104,23 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     const newSettings = changes.settings.newValue;
     const oldSettings = changes.settings.oldValue || {};
     
-    console.log('Settings changed:', newSettings);
+    console.log('[Niblie] Settings changed:', newSettings);
     
     // If word count setting changed
     if (newSettings.showWordCount !== oldSettings.showWordCount) {
+      // Update WordCounter enabled state
+      if (typeof WordCounter !== 'undefined') {
+        WordCounter.isEnabled = newSettings.showWordCount;
+      }
+      
       if (newSettings.showWordCount) {
         // Re-enable word counting
-        console.log('Word counting enabled, setting up listeners');
+        console.log('[Niblie] Word counting enabled, setting up listeners');
         setupWordCountListeners();
         performWordCount(); // Update count immediately
       } else {
         // Just update badge to empty state if disabled
-        console.log('Word counting disabled');
+        console.log('[Niblie] Word counting disabled');
         if (typeof BadgeUI !== 'undefined') {
           BadgeUI.updateBadge(0);
         }
@@ -119,16 +138,16 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
   }
 });
 
-// Debounce function to prevent excessive updates
-function debounce(func, delay) {
-  let timeout;
-  return function() {
-    const context = this;
-    const args = arguments;
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(context, args), delay);
+// Use debounce from CoreUtils if available, otherwise create a simple one
+const debounce = (typeof CoreUtils !== 'undefined' && CoreUtils.debounce) ? 
+  CoreUtils.debounce : 
+  function(func, delay) {
+    let timeout;
+    return function(...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), delay);
+    };
   };
-}
 
 // Start the app when page loads
 document.addEventListener('DOMContentLoaded', () => {

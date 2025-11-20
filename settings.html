@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Niblie - Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #4285f4;
+      --primary-dark: #3367d6;
+      --secondary: #5f6368;
+      --success: #0f9d58;
+      --danger: #db4437;
+      --bg: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --border: #dadce0;
+      --text: #202124;
+      --text-secondary: #5f6368;
+      --shadow: 0 1px 3px rgba(60, 64, 67, 0.3);
+      --shadow-lg: 0 4px 16px rgba(60, 64, 67, 0.15);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-secondary);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* Header */
+    header {
+      background: var(--bg);
+      box-shadow: var(--shadow);
+      margin-bottom: 32px;
+      border-radius: 8px;
+      padding: 32px;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--primary), #667eea);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 32px;
+      font-weight: 700;
+    }
+
+    .logo-text h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .logo-text p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* Tabs */
+    .tabs {
+      background: var(--bg);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .tab-nav {
+      display: flex;
+      gap: 0;
+      padding: 0;
+      list-style: none;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .tab-nav li {
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .tab-link {
+      display: block;
+      padding: 16px 24px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      text-align: center;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .tab-link:hover {
+      color: var(--primary);
+      background: var(--bg-secondary);
+    }
+
+    .tab-link.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    /* Content Sections */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-header {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-header h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .card-header p {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* Position Grid */
+    .position-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 20px 0;
+      max-width: 400px;
+    }
+
+    .position-btn {
+      aspect-ratio: 1;
+      border: 2px solid var(--border);
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .position-btn:hover {
+      border-color: var(--primary);
+      transform: scale(1.05);
+    }
+
+    .position-btn.active {
+      border-color: var(--primary);
+      background: var(--primary);
+    }
+
+    .position-dot {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: var(--text-secondary);
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+
+    .position-btn.active .position-dot {
+      background: white;
+    }
+
+    .position-dot.top-left { top: 12px; left: 12px; }
+    .position-dot.top-center { top: 12px; left: 50%; transform: translateX(-50%); }
+    .position-dot.top-right { top: 12px; right: 12px; }
+    .position-dot.middle-left { top: 50%; left: 12px; transform: translateY(-50%); }
+    .position-dot.middle-center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .position-dot.middle-right { top: 50%; right: 12px; transform: translateY(-50%); }
+    .position-dot.bottom-left { bottom: 12px; left: 12px; }
+    .position-dot.bottom-center { bottom: 12px; left: 50%; transform: translateX(-50%); }
+    .position-dot.bottom-right { bottom: 12px; right: 12px; }
+
+    /* Toggle Switch */
+    .option-group {
+      margin-bottom: 20px;
+    }
+
+    .toggle-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .toggle-wrapper label {
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.3s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    /* Color Inputs */
+    .color-field {
+      margin-bottom: 16px;
+    }
+
+    .color-field label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .color-input-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .color-input-group input[type="color"] {
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .color-value {
+      font-family: monospace;
+      font-weight: 600;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    /* Tab Control */
+    .tab-control {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text);
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    /* Range Slider */
+    .slider-with-value {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slider-with-value.wide {
+      width: 100%;
+    }
+
+    .slider-with-value input[type="range"] {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .slider-with-value input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+    }
+
+    .range-value {
+      font-weight: 600;
+      color: var(--primary);
+      min-width: 45px;
+    }
+
+    /* Preview */
+    .preview-container {
+      padding: 40px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 150px;
+    }
+
+    .badge-preview {
+      padding: 12px 24px;
+      background: #4285f4;
+      color: white;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Radio Groups */
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .radio-label {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .radio-label:hover {
+      border-color: var(--primary);
+    }
+
+    .radio-label input {
+      margin-right: 12px;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      box-shadow: 0 2px 8px rgba(66, 133, 244, 0.4);
+    }
+
+    /* Autofill */
+    .autofill-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .autofill-item {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 6px;
+      align-items: center;
+    }
+
+    .autofill-item input {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .autofill-item input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .remove-btn {
+      padding: 10px 16px;
+      background: var(--danger);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .remove-btn:hover {
+      background: #c5221f;
+    }
+
+    /* Footer */
+    footer {
+      position: sticky;
+      bottom: 0;
+      background: var(--bg);
+      padding: 20px 32px;
+      box-shadow: 0 -2px 8px rgba(60, 64, 67, 0.1);
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 16px;
+      border-radius: 8px;
+      margin-top: 24px;
+    }
+
+    #status-message {
+      font-weight: 500;
+      color: var(--success);
+    }
+
+    .hint {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    .color-section {
+      margin-top: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-container">
+        <div class="logo">N</div>
+        <div class="logo-text">
+          <h1>Niblie</h1>
+          <p>Smart Extension Settings</p>
+        </div>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <ul class="tab-nav">
+        <li><a class="tab-link active" data-tab="badge-style">Badge Style</a></li>
+        <li><a class="tab-link" data-tab="ad-blockers">Ad Blockers</a></li>
+        <li><a class="tab-link" data-tab="advanced">Advanced</a></li>
+        <li><a class="tab-link" data-tab="autofill">Form Autofill</a></li>
+        <li><a class="tab-link" data-tab="about">About</a></li>
+      </ul>
+    </nav>
+
+    <!-- Badge Style Tab (Combined: Position, Colors, Theme) -->
+    <div class="tab-content active" id="badge-style">
+      <div class="card">
+        <div class="card-header">
+          <h2>Badge Position</h2>
+          <p>Choose where the word counter badge appears on webpages</p>
+        </div>
+
+        <div class="position-grid">
+          <button class="position-btn" data-position="top-left">
+            <span class="position-dot top-left"></span>
+          </button>
+          <button class="position-btn" data-position="top-center">
+            <span class="position-dot top-center"></span>
+          </button>
+          <button class="position-btn active" data-position="top-right">
+            <span class="position-dot top-right"></span>
+          </button>
+          <button class="position-btn" data-position="middle-left">
+            <span class="position-dot middle-left"></span>
+          </button>
+          <button class="position-btn" data-position="middle-center">
+            <span class="position-dot middle-center"></span>
+          </button>
+          <button class="position-btn" data-position="middle-right">
+            <span class="position-dot middle-right"></span>
+          </button>
+          <button class="position-btn" data-position="bottom-left">
+            <span class="position-dot bottom-left"></span>
+          </button>
+          <button class="position-btn" data-position="bottom-center">
+            <span class="position-dot bottom-center"></span>
+          </button>
+          <button class="position-btn" data-position="bottom-right">
+            <span class="position-dot bottom-right"></span>
+          </button>
+        </div>
+        <p class="hint">You can also drag the badge to any position once it appears on a webpage.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Visibility</h2>
+          <p>Control the visibility of the word counter</p>
+        </div>
+
+        <div class="option-group">
+          <div class="toggle-wrapper">
+            <label for="show-word-count">Show word count</label>
+            <label class="switch">
+              <input type="checkbox" id="show-word-count" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <p class="hint">When disabled, an empty badge will be shown and word counting will be disabled for better performance</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Color Style</h2>
+          <p>Customize badge colors</p>
+        </div>
+
+        <div class="tab-control">
+          <button class="tab-btn active" data-tab="solid">Solid Color</button>
+          <button class="tab-btn" data-tab="gradient">Gradient</button>
+        </div>
+
+        <div id="solid-options" class="color-section">
+          <div class="color-field">
+            <label for="badge-color">Badge Color</label>
+            <div class="color-input-group">
+              <input type="color" id="badge-color" value="#4285f4">
+              <span class="color-value">#4285F4</span>
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="text-color">Text Color</label>
+            <div class="color-input-group">
+              <input type="color" id="text-color" value="#ffffff">
+              <span class="color-value">#FFFFFF</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="gradient-options" class="color-section" style="display: none;">
+          <div class="color-field">
+            <label for="gradient-start">Gradient Start</label>
+            <div class="color-input-group">
+              <input type="color" id="gradient-start" value="#4285f4">
+              <span class="color-value">#4285F4</span>
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="gradient-end">Gradient End</label>
+            <div class="color-input-group">
+              <input type="color" id="gradient-end" value="#0F9D58">
+              <span class="color-value">#0F9D58</span>
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="gradient-angle">Gradient Angle</label>
+            <div class="slider-with-value wide">
+              <input type="range" id="gradient-angle" min="0" max="360" value="45" step="15">
+              <span class="range-value">45°</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="color-field">
+          <label for="opacity-slider">Badge Transparency</label>
+          <div class="slider-with-value wide">
+            <input type="range" id="opacity-slider" min="10" max="100" value="90" step="10">
+            <span class="range-value">90%</span>
+          </div>
+        </div>
+
+        <div class="option-group" style="margin-top: 24px;">
+          <label style="display: block; font-weight: 600; margin-bottom: 12px;">Live Preview</label>
+          <div class="preview-container">
+            <div class="badge-preview">123 words</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Cute Theme</h2>
+          <p>Add a fun, cute appearance to the word counter badge</p>
+        </div>
+
+        <div class="option-group">
+          <div class="toggle-wrapper">
+            <label for="use-cute-theme">Use cute theme</label>
+            <label class="switch">
+              <input type="checkbox" id="use-cute-theme" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div id="cute-theme-options">
+          <div class="option-group">
+            <label style="display: block; font-weight: 600; margin-bottom: 12px;">Theme Style</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="cute-theme-style" value="kawaii" checked>
+                <span>Kawaii (Pink)</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="cute-theme-style" value="pastel">
+                <span>Pastel (Blue)</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="cute-theme-style" value="bubbly">
+                <span>Bubbly (Mint)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="option-group">
+            <div class="toggle-wrapper">
+              <label for="enable-animations">Enable animations</label>
+              <label class="switch">
+                <input type="checkbox" id="enable-animations" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <p class="hint">Periodically animates the badge to make it more engaging</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- Ad Blockers Tab -->
+    <div class="tab-content" id="ad-blockers">
+      <div class="card">
+        <div class="card-header">
+          <h2>Ad Blockers</h2>
+          <p>Control ad blocking for different platforms</p>
+        </div>
+
+        <div class="option-group">
+          <div class="toggle-wrapper">
+            <label for="youtube-adblocker">
+              <strong>YouTube Ad Blocker</strong><br>
+              <span class="hint" style="margin: 0;">Automatically skip and mute YouTube ads</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="youtube-adblocker" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <div class="toggle-wrapper">
+            <label for="spotify-adblocker">
+              <strong>Spotify Ad Blocker</strong><br>
+              <span class="hint" style="margin: 0;">Mute and skip Spotify ads (Web Player only)</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="spotify-adblocker" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced Tab -->
+    <div class="tab-content" id="advanced">
+      <div class="card">
+        <div class="card-header">
+          <h2>Advanced Features</h2>
+          <p>Enable or disable advanced monitoring and analytics features</p>
+        </div>
+
+        <div class="option-group">
+          <div class="toggle-wrapper">
+            <label for="enable-performance-monitor">
+              <strong>Performance Monitor</strong><br>
+              <span class="hint" style="margin: 0;">Track extension performance metrics, memory usage, and execution times</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="enable-performance-monitor">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <div class="toggle-wrapper">
+            <label for="enable-error-tracking">
+              <strong>Error Tracking</strong><br>
+              <span class="hint" style="margin: 0;">Log and track errors for debugging (stored locally only)</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="enable-error-tracking" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <div class="toggle-wrapper">
+            <label for="enable-analytics">
+              <strong>Usage Analytics</strong><br>
+              <span class="hint" style="margin: 0;">Collect anonymous usage statistics to improve the extension</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="enable-analytics">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <div class="toggle-wrapper">
+            <label for="enable-debug-mode">
+              <strong>Debug Mode</strong><br>
+              <span class="hint" style="margin: 0;">Show detailed console logs for troubleshooting</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="enable-debug-mode">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px; padding: 16px; background: var(--bg-secondary); border-radius: 6px; border-left: 3px solid var(--primary);">
+          <strong style="color: var(--primary);">Privacy Notice:</strong>
+          <p class="hint" style="margin: 8px 0 0 0;">All monitoring data is stored locally on your device only. We never send any data to external servers.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Autofill Tab -->
+    <div class="tab-content" id="autofill">
+      <div class="card">
+        <div class="card-header">
+          <h2>Form Autofill</h2>
+          <p>Define field names and values you'd like to auto-fill in forms (Google Forms, university forms, etc.)</p>
+        </div>
+
+        <div id="autofill-list" class="autofill-list"></div>
+
+        <button id="add-autofill-field" class="btn btn-primary">Add Field</button>
+      </div>
+    </div>
+
+    <!-- About Tab -->
+    <div class="tab-content" id="about">
+      <div class="card">
+        <div class="card-header">
+          <h2>About Niblie</h2>
+          <p>Smart extension for enhanced browsing experience</p>
+        </div>
+
+        <div style="line-height: 1.8;">
+          <h3 style="margin-bottom: 12px; font-size: 18px; font-weight: 600;">Features</h3>
+          <ul style="padding-left: 24px; margin-bottom: 24px;">
+            <li>Word Counter - Track words on any webpage</li>
+            <li>Ad Blockers - Block YouTube and Spotify ads</li>
+            <li>Form Autofill - Automatically fill repetitive forms</li>
+            <li>Customization - Personalize colors, themes, and positions</li>
+          </ul>
+
+          <h3 style="margin-bottom: 12px; font-size: 18px; font-weight: 600;">Version</h3>
+          <p style="margin-bottom: 24px;">0.5.0</p>
+
+          <h3 style="margin-bottom: 12px; font-size: 18px; font-weight: 600;">Contributing</h3>
+          <p style="margin-bottom: 12px;">We welcome contributions! Visit our GitHub repository to:</p>
+          <ul style="padding-left: 24px; margin-bottom: 24px;">
+            <li>Report bugs and issues</li>
+            <li>Suggest new features</li>
+            <li>Submit pull requests</li>
+            <li>Improve documentation</li>
+          </ul>
+
+          <a href="https://github.com/shashix07/Niblie" target="_blank" class="btn btn-primary">View on GitHub</a>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <span id="status-message"></span>
+      <button id="save-btn" class="btn btn-primary">Save Settings</button>
+    </footer>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

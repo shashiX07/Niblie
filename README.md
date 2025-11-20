@@ -4,12 +4,13 @@
 
 ---
 
-## 🆕 Version 0.2.0 Updates
+## 🆕 Version 0.3.0 Updates
 
-* Added working Ad Blocker for YouTube and Spotify
-* Autofill Engine for form filling with JSON or ENV-style input
-* Supports DevTools injection
-* Previous bug updates and UI fixes
+* Enhanced Ad Blocker with smart detection (8 methods)
+* UI-based muting system for Spotify ads
+* Performance monitoring and memory management
+* Settings page renamed to settings.html for clarity
+* Improved module system and bug fixes
 
 ---
 
@@ -68,7 +69,7 @@ You can use Niblie in two ways:
 
 ### 1. Manual Installation from ZIP
 
-1. [Download the latest ZIP release](https://github.com/shashiX07/Niblie/releases/download/Niblie/Niblie-v0.2.0.zip)
+1. [Download the latest ZIP release](https://github.com/shashix07/Niblie/releases/latest)
 2. Extract the ZIP
 3. Open Chrome and go to `chrome://extensions/`
 4. Enable **Developer Mode** (top-right corner)
@@ -93,28 +94,31 @@ Then load it in Chrome as an unpacked extension as explained above.
 
 ```
 niblie/
-├── manifest.json          # Extension config
-├── background.js          # Runs on install/init
-├── content.js             # Injects all page-related logic
-├── modules/wordCounter.js         # Viewport-based word counting
-├── modules/ui.js                  # UI badge + theme logic
-├── modules/linkFinder.js          # Finds & categorizes links
-├── modules/imageFinder.js         # Finds all images
-├── modules/videoFinder.js         # Detects videos
-├── modules/tableFinder.js         # Highlights tables
-├── modules/modal.js               # Custom modal viewer
-├── formAutofiller.js      # Smart auto-filler for forms
-├── adblockers/youtube-adblocker.js   # Blocks/skips YouTube ads
-├── adblockers/spotify-adblocker.js   # Skips/mutes Spotify ads
-├── index.html/css/js      # Settings UI
-└── assets/                # Icons, images, themes
+├── manifest.json                           # Extension config
+├── background.js                           # Runs on install/init
+├── content.js                              # Injects page logic
+├── formautofiller.js                       # Smart form auto-filler
+├── settings.html/css/js                    # Settings page
+├── index.html                              # Landing page
+├── modules/
+│   ├── wordCounter.js                      # Word counting
+│   ├── ui.js                               # Badge UI
+│   ├── linkFinder.js                       # Link detection
+│   ├── imageFinder.js                      # Image detection
+│   ├── videoFinder.js                      # Video detection
+│   ├── tableFinder.js                      # Table detection
+│   ├── modal.js                            # Modal viewer
+│   └── core.js                             # Core utilities
+└── adblockers/
+    ├── spotify-mute-adblocker.js           # Spotify ad blocker
+    └── youtubeblocker.js                   # YouTube ad blocker
 ```
 
 ---
 
 ## 📦 Data Setup for Autofill
 
-You can manage your autofill fields via the options page :
+You can manage your autofill fields via the settings page:
 
 ```env
 NAME=John Doe
@@ -127,9 +131,9 @@ GITHUB=https://github.com/johndoe
 
 To manually inject autofill data via the DevTools Console:
 
-1. Open your extension's **Options Page**
+1. Open your extension's **Settings Page**
 
-   * Or directly open: [chrome-extension://your-niblie-id-here/index.html](chrome-extension://<your-niblie-id-here>/index.html)
+   * Or directly open: `chrome-extension://<your-niblie-id-here>/settings.html`
 
 2. Open **DevTools Console** (`Ctrl+Shift+I` or `Cmd+Option+I`)
 
@@ -146,7 +150,7 @@ chrome.storage.sync.set({
   ]
 });
 ```
-👉 You can download a sample file from [here](https://github.com/shashiX07/Niblie/releases/download/Niblie/sample.json)
+👉 Sample format available in releases
 ---
 
 ## 👨‍💻 Developers
@@ -188,8 +192,9 @@ Found a bug or issue? Please report it using this Google Form:
 
 ## 📎 Links
 
-* [Download ZIP](https://github.com/shashiX07/Niblie/releases/download/Niblie/Niblie-v0.2.0.zip)
+* [Download Latest Release](https://github.com/shashix07/Niblie/releases/latest)
 * [GitHub Repository](https://github.com/shashix07/Niblie)
+* [Landing Page](https://shashix07.github.io/Niblie/)
 
 ---
 
