@@ -6,11 +6,11 @@
 
 ## 🆕 Version 0.3.0 - Latest Updates
 
-* **🎓 College Automation Framework** - Automated Scipts supports for different organization and institutes automations scripts support. 
+* **🎓 Organization Automation Framework** - Automated Scipts supports for different organization and institutes automations scripts support. 
 * **✨ Floating Particles** - Customizable cute animations around badge (hearts, stars, sparkles, custom images/GIFs)
 * **🔐 Smart Credential Learning** - Auto-saves login data as you type
 * **🎨 Enhanced Cute Theme** - More animation options and particle controls
-* **📦 Extensible Architecture** - Easy framework for adding more colleges/organizations
+* **📦 Extensible Architecture** - Easy framework for adding more Organizations/organizations
 
 ---
 
@@ -46,9 +46,9 @@
 * Designed to remain undetectable
 * Future support for filter list integrations
 
-### 🎓 College Auto-Login
+### 🎓 Organization Auto-Login
 
-* Automatically fills login credentials for supported college portals
+* Automatically fills login credentials for supported Organization portals
 * **Currently supports:** IIT Kharagpur ERP
 * **Features:**
   * Auto-fills User ID and Password
@@ -56,7 +56,7 @@
   * Learns new credentials as you type
   * Secure browser-based storage
   * Manual OTP entry for security
-* **Extensible:** Add your college - see [colleges/README.md](colleges/README.md)
+* **Extensible:** Add your Organization - see [Organizations/README.md](Organizations/README.md)
 
 ### ✨ Floating Particles
 
