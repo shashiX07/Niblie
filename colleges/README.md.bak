@@ -1,0 +1,297 @@
+# 🎓 College-Specific Automation Scripts
+
+This folder contains college-specific automation scripts for automating login, attendance, and other repetitive tasks on college portals.
+
+## 📁 Folder Structure
+
+```
+colleges/
+├── registry.json              # Global registry mapping URLs to colleges
+├── loader.js                  # Dynamic script loader
+└── [college-code]/            # Individual college folder
+    ├── config.json            # College configuration
+    ├── login.js               # Auto-login script
+    ├── attendance.js          # Attendance automation (optional)
+    └── [other-scripts].js     # Additional custom scripts
+```
+
+## 🏫 Currently Supported Colleges
+
+### IIT Kharagpur (iitkgp)
+- **Base URL:** https://erp.iitkgp.ac.in
+- **Features:**
+  - ✅ Auto-login with credentials saving
+  - ✅ Security question auto-fill
+  - ✅ Learns credentials on first use
+  - 🔒 All data stored locally in browser
+
+## 🚀 How It Works
+
+### 1. **Auto-Login Process**
+   - Script detects you're on the login page
+   - Fills your saved User ID and Password
+   - Waits for security question to appear
+   - Auto-fills the security answer
+   - Clicks "Send OTP" button
+   - You manually enter OTP (for security)
+
+### 2. **Learning Mode**
+   - If no credentials are saved, script watches what you type
+   - Automatically saves credentials after you enter them
+   - Shows confirmation when data is saved
+   - Next time, auto-fills everything!
+
+### 3. **Security Question Handling**
+   - Saves answers to all 3 security questions
+   - Matches question text to find correct answer
+   - Works even if questions are asked randomly
+
+## 📝 Adding Your Own College
+
+Want to add automation for your college? Follow these steps:
+
+### Step 1: Create College Folder
+```bash
+colleges/
+└── your-college-code/        # e.g., iitb, iisc, nit, etc.
+    ├── config.json
+    └── login.js
+```
+
+### Step 2: Create config.json
+```json
+{
+  "collegeName": "Your College Name",
+  "collegeCode": "your-college-code",
+  "baseUrl": "https://your-college-portal.com",
+  "loginUrl": "https://your-college-portal.com/login",
+  "urlPatterns": [
+    "your-college-portal.com"
+  ],
+  "features": {
+    "autoLogin": true,
+    "autoAttendance": false,
+    "autoFillForms": true
+  },
+  "storageKeys": {
+    "userId": "your_college_user_id",
+    "password": "your_college_password",
+    "securityQuestions": "your_college_security_answers"
+  },
+  "selectors": {
+    "login": {
+      "form": "#loginForm",
+      "userId": "#username",
+      "password": "#password",
+      "submitBtn": "#loginBtn"
+    }
+  }
+}
+```
+
+### Step 3: Create login.js
+```javascript
+const YourCollegeLogin = {
+  config: null,
+  credentials: null,
+  
+  async init() {
+    // Load config
+    this.config = await this.loadConfig();
+    this.credentials = await this.loadCredentials();
+    
+    // Start auto-fill
+    if (window.location.href.includes(this.config.loginUrl)) {
+      this.fillLoginForm();
+    }
+  },
+  
+  async loadConfig() {
+    // Return your config
+  },
+  
+  async loadCredentials() {
+    // Load from chrome.storage.sync
+  },
+  
+  fillLoginForm() {
+    // Your custom logic here
+  }
+};
+
+// Initialize
+YourCollegeLogin.init();
+```
+
+### Step 4: Update registry.json
+Add your college to `colleges/registry.json`:
+```json
+{
+  "colleges": [
+    {
+      "code": "your-college-code",
+      "name": "Your College Name",
+      "urlPatterns": ["your-college-portal.com"],
+      "scripts": ["colleges/your-college-code/login.js"]
+    }
+  ],
+  "matchRules": {
+    "your-college-portal.com": {
+      "college": "your-college-code",
+      "features": ["autoLogin"]
+    }
+  }
+}
+```
+
+### Step 5: Update manifest.json
+Add your college URL pattern:
+```json
+{
+  "matches": ["*://your-college-portal.com/*"],
+  "js": ["colleges/loader.js", "colleges/your-college-code/login.js"],
+  "run_at": "document_end"
+}
+```
+
+## 🔧 Common Patterns
+
+### Finding Form Selectors
+Open your college login page and:
+1. Right-click on Username field → Inspect
+2. Note the `id` or `name` attribute
+3. Use `#id-name` for ID or `[name="field-name"]` for name
+4. Repeat for all fields
+
+### Handling Dynamic Fields
+If fields appear after some action:
+```javascript
+monitorForField() {
+  const observer = new MutationObserver(() => {
+    const field = document.querySelector('#dynamic-field');
+    if (field) {
+      this.fillInput(field, this.credentials.value);
+      observer.disconnect();
+    }
+  });
+  
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+}
+```
+
+### Saving User Input
+```javascript
+monitorInput(input, storageKey) {
+  let saveTimeout;
+  
+  input.addEventListener('input', () => {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+      const value = input.value.trim();
+      if (value) {
+        chrome.storage.sync.set({ [storageKey]: value });
+        console.log('Saved:', storageKey);
+      }
+    }, 2000);
+  });
+}
+```
+
+## 🔒 Security Considerations
+
+### What's Safe:
+- ✅ Storing credentials in chrome.storage.sync (encrypted by Chrome)
+- ✅ Auto-filling forms on correct domain only
+- ✅ User must manually enter OTP
+
+### What to Avoid:
+- ❌ Sending credentials to external servers
+- ❌ Storing plain text passwords in files
+- ❌ Auto-submitting forms without user consent
+- ❌ Bypassing 2FA/OTP verification
+
+## 📊 Testing Your Script
+
+1. **Clear existing credentials:**
+   ```javascript
+   chrome.storage.sync.remove(['your_college_user_id', 'your_college_password']);
+   ```
+
+2. **Open login page and check console:**
+   - Look for `[Your College] Initializing...`
+   - Check if form fields are detected
+   - Verify credentials are saved
+
+3. **Test auto-fill:**
+   - Reload page
+   - Should auto-fill saved credentials
+   - Check for any errors
+
+## 🎨 Customization Ideas
+
+### 1. **Attendance Automation**
+```javascript
+// colleges/your-college/attendance.js
+const AttendanceBot = {
+  async markAttendance() {
+    // Navigate to attendance page
+    // Fill attendance form
+    // Submit
+  }
+};
+```
+
+### 2. **Course Registration**
+```javascript
+// colleges/your-college/course-registration.js
+const CourseReg = {
+  async registerCourses(courseCodes) {
+    // Auto-register for courses
+  }
+};
+```
+
+### 3. **Grade Scraper**
+```javascript
+// colleges/your-college/grades.js
+const GradeScraper = {
+  async scrapeGrades() {
+    // Extract and display grades
+  }
+};
+```
+
+## 🤝 Contributing
+
+Want to add your college? Follow these steps:
+
+1. Create your college folder with config and scripts
+2. Test thoroughly on your college portal
+3. Create a pull request with:
+   - College folder
+   - Updated registry.json
+   - Updated manifest.json
+   - Documentation of features
+
+## 📞 Support
+
+Having issues? Check:
+- Browser console for error messages
+- Form field selectors are correct
+- URL patterns match your college domain
+- Credentials are being saved (check chrome.storage)
+
+## ⚠️ Disclaimer
+
+These scripts are for **educational purposes** and to improve user experience. Always:
+- Respect your college's terms of service
+- Use responsibly
+- Don't share credentials with others
+- Don't bypass security measures
+
+---
+
+**Happy Automating! 🚀**

@@ -1,0 +1,38 @@
+{
+  "collegeName": "IIT Kharagpur",
+  "collegeCode": "iitkgp",
+  "baseUrl": "https://erp.iitkgp.ac.in",
+  "loginUrl": "https://erp.iitkgp.ac.in/SSOAdministration/login.htm",
+  "urlPatterns": [
+    "erp.iitkgp.ac.in"
+  ],
+  "features": {
+    "autoLogin": true,
+    "autoAttendance": false,
+    "autoFillForms": true
+  },
+  "storageKeys": {
+    "userId": "iitkgp_user_id",
+    "password": "iitkgp_password",
+    "securityQuestions": "iitkgp_security_answers"
+  },
+  "selectors": {
+    "login": {
+      "form": "#loginForm",
+      "userId": "#user_id",
+      "password": "#password",
+      "answerDiv": "#answer_div",
+      "question": "#question",
+      "answer": "#answer",
+      "sendOtpBtn": "#getotp",
+      "otpInput": "#email_otp1",
+      "submitBtn": "#loginFormSubmitButton",
+      "showPasswordCheckbox": "#show_password"
+    }
+  },
+  "securityQuestions": [
+    "Which youtubers content do you like most",
+    "What is your favorite movie",
+    "What is your pet name"
+  ]
+}

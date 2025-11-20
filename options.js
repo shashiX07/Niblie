@@ -96,7 +96,10 @@ document.addEventListener('DOMContentLoaded', function() {
 const autofillList = document.getElementById("autofill-list");
 const addFieldBtn = document.getElementById("add-autofill-field");
 
+let currentAutofillFields = [];
+
 function renderAutofillFields(fields = []) {
+  currentAutofillFields = fields;
   autofillList.innerHTML = "";
 
   fields.forEach((pair, index) => {
@@ -117,38 +120,35 @@ function renderAutofillFields(fields = []) {
     removeBtn.textContent = "Remove";
     removeBtn.className = "remove-btn";
     removeBtn.onclick = () => {
-      fields.splice(index, 1);
-      renderAutofillFields(fields);
+      currentAutofillFields.splice(index, 1);
+      renderAutofillFields(currentAutofillFields);
+      chrome.storage.sync.set({ autofillFields: currentAutofillFields });
     };
 
-    keyInput.oninput = () => (pair.key = keyInput.value);
-    valueInput.oninput = () => (pair.value = valueInput.value);
+    keyInput.oninput = () => {
+      currentAutofillFields[index].key = keyInput.value;
+      chrome.storage.sync.set({ autofillFields: currentAutofillFields });
+    };
+    
+    valueInput.oninput = () => {
+      currentAutofillFields[index].value = valueInput.value;
+      chrome.storage.sync.set({ autofillFields: currentAutofillFields });
+    };
 
     wrapper.appendChild(keyInput);
     wrapper.appendChild(valueInput);
     wrapper.appendChild(removeBtn);
     autofillList.appendChild(wrapper);
   });
-
-  chrome.storage.sync.set({ autofillFields: fields });
 }
 
 addFieldBtn.addEventListener('click', () => {
-  const currentFields = [];
+  // Add a new empty field to the current array
+  currentAutofillFields.push({ key: '', value: '' });
 
-  // Collect the current values from the DOM
-  autofillList.querySelectorAll('.autofill-field').forEach(wrapper => {
-    const inputs = wrapper.querySelectorAll('input');
-    const key = inputs[0]?.value || '';
-    const value = inputs[1]?.value || '';
-    currentFields.push({ key, value });
-  });
-
-  // Add a new empty field
-  currentFields.push({ key: '', value: '' });
-
-  // Re-render and update storage
-  renderAutofillFields(currentFields);
+  // Re-render and save to storage
+  renderAutofillFields(currentAutofillFields);
+  chrome.storage.sync.set({ autofillFields: currentAutofillFields });
 });
 
 
@@ -171,6 +171,13 @@ const DEFAULT_SETTINGS = {
   useCuteTheme: false,
   cuteThemeStyle: "kawaii",
   enableAnimations: false,
+  enableFloatingParticles: true,
+  particleType: 'hearts',
+  particleFrequency: 3,
+  particleSpeed: 3,
+  customParticleImage: null,
+  customParticleType: 'png',
+  gifAnimationDelay: 100
 };
 
 // DOM Elements
@@ -195,6 +202,32 @@ const cuteThemeOptions = document.getElementById("cute-theme-options");
 const cuteThemeStyleRadios = document.getElementsByName("cute-theme-style");
 const enableAnimationsCheckbox = document.getElementById("enable-animations");
 
+// Floating particles controls
+const enableFloatingParticlesCheckbox = document.getElementById("enable-floating-particles");
+const floatingParticlesOptions = document.getElementById("floating-particles-options");
+const particleTypeRadios = document.getElementsByName("particle-type");
+const customParticleUpload = document.getElementById("custom-particle-upload");
+const customParticleFile = document.getElementById("custom-particle-file");
+const customParticlePreview = document.getElementById("custom-particle-preview");
+const customParticlePreviewImg = document.getElementById("custom-particle-preview-img");
+const removeCustomParticleBtn = document.getElementById("remove-custom-particle");
+const gifAnimationSettings = document.getElementById("gif-animation-settings");
+const gifAnimationDelay = document.getElementById("gif-animation-delay");
+const gifDelayValue = document.getElementById("gif-delay-value");
+const particleFrequencyInput = document.getElementById("particle-frequency");
+const frequencyValueSpan = document.getElementById("frequency-value");
+const particleSpeedInput = document.getElementById("particle-speed");
+const speedValueSpan = document.getElementById("speed-value");
+
+let customParticleImageData = null;
+let customParticleType = 'png';
+
+console.log('[Options] Particle image elements loaded:', {
+  file: !!customParticleFile,
+  preview: !!customParticlePreview,
+  previewImg: !!customParticlePreviewImg
+});
+
 // Helper functions
 const updateColorValue = (input, valueDisplay) => {
   valueDisplay.textContent = input.value.toUpperCase();
@@ -203,6 +236,110 @@ const updateColorValue = (input, valueDisplay) => {
 const updateRangeValue = (input, valueDisplay, unit = "") => {
   valueDisplay.textContent = `${input.value}${unit}`;
 };
+
+// Floating particles event listeners
+if (enableFloatingParticlesCheckbox) {
+  enableFloatingParticlesCheckbox.addEventListener('change', function() {
+    if (floatingParticlesOptions) {
+      floatingParticlesOptions.style.display = this.checked ? 'block' : 'none';
+    }
+  });
+}
+
+// Particle type radio buttons
+particleTypeRadios.forEach(radio => {
+  radio.addEventListener('change', function() {
+    if (customParticleUpload) {
+      customParticleUpload.style.display = this.value === 'custom' ? 'block' : 'none';
+    }
+  });
+});
+
+// Custom particle file upload
+if (customParticleFile) {
+  customParticleFile.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validate file size (max 100KB)
+    if (file.size > 100 * 1024) {
+      alert('File size must be less than 100KB. Please choose a smaller image.');
+      this.value = '';
+      return;
+    }
+    
+    // Validate file type
+    if (!file.type.match('image/(png|gif)')) {
+      alert('Please upload a PNG or GIF file.');
+      this.value = '';
+      return;
+    }
+    
+    customParticleType = file.type === 'image/gif' ? 'gif' : 'png';
+    
+    // Read file as base64
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      customParticleImageData = event.target.result;
+      console.log('[Options] Custom particle image loaded:', {
+        type: customParticleType,
+        size: customParticleImageData.length,
+        preview: customParticleImageData.substring(0, 50) + '...'
+      });
+      
+      // Show preview
+      if (customParticlePreviewImg) {
+        customParticlePreviewImg.src = customParticleImageData;
+      }
+      if (customParticlePreview) {
+        customParticlePreview.style.display = 'block';
+      }
+      
+      // Show GIF settings if it's a GIF
+      if (gifAnimationSettings) {
+        gifAnimationSettings.style.display = customParticleType === 'gif' ? 'block' : 'none';
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Remove custom particle image
+if (removeCustomParticleBtn) {
+  removeCustomParticleBtn.addEventListener('click', function() {
+    customParticleImageData = null;
+    if (customParticleFile) customParticleFile.value = '';
+    if (customParticlePreview) customParticlePreview.style.display = 'none';
+    if (gifAnimationSettings) gifAnimationSettings.style.display = 'none';
+  });
+}
+
+// GIF animation delay slider
+if (gifAnimationDelay) {
+  gifAnimationDelay.addEventListener('input', function() {
+    if (gifDelayValue) {
+      gifDelayValue.textContent = this.value + 'ms';
+    }
+  });
+}
+
+// Particle frequency slider
+if (particleFrequencyInput) {
+  particleFrequencyInput.addEventListener('input', function() {
+    if (frequencyValueSpan) {
+      frequencyValueSpan.textContent = this.value;
+    }
+  });
+}
+
+// Particle speed slider
+if (particleSpeedInput) {
+  particleSpeedInput.addEventListener('input', function() {
+    if (speedValueSpan) {
+      speedValueSpan.textContent = this.value;
+    }
+  });
+}
 
 const updateBadgePreview = () => {
   // Get current values
@@ -411,6 +548,14 @@ saveButton.addEventListener("click", () => {
       (radio) => radio.checked
     ).value,
     enableAnimations: enableAnimationsCheckbox.checked,
+    // Floating particles settings
+    enableFloatingParticles: enableFloatingParticlesCheckbox ? enableFloatingParticlesCheckbox.checked : true,
+    particleType: Array.from(particleTypeRadios).find((radio) => radio.checked)?.value || 'hearts',
+    particleFrequency: particleFrequencyInput ? parseInt(particleFrequencyInput.value) : 3,
+    particleSpeed: particleSpeedInput ? parseInt(particleSpeedInput.value) : 3,
+    customParticleImage: customParticleImageData || null,
+    customParticleType: customParticleType || 'png',
+    gifAnimationDelay: gifAnimationDelay ? parseInt(gifAnimationDelay.value) : 100,
     // Advanced features
     enablePerformanceMonitor: performanceMonitorCheckbox ? performanceMonitorCheckbox.checked : false,
     enableErrorTracking: errorTrackingCheckbox ? errorTrackingCheckbox.checked : true,
@@ -418,8 +563,16 @@ saveButton.addEventListener("click", () => {
     enableDebugMode: debugModeCheckbox ? debugModeCheckbox.checked : false
   };
 
+  // Log particle image status before saving
+  console.log('[Options] Saving settings with particle image:', {
+    hasImage: !!settings.customParticleImage,
+    imageType: settings.customParticleType,
+    imageSize: settings.customParticleImage ? settings.customParticleImage.length : 0
+  });
+
   // Save to storage
   chrome.storage.sync.set({ settings }, () => {
+    console.log('[Options] Settings saved successfully');
     statusMessage.textContent = "Settings saved!";
     statusMessage.style.color = "var(--success)";
     setTimeout(() => {
@@ -515,6 +668,66 @@ const loadSettings = () => {
     }
 
     enableAnimationsCheckbox.checked = settings.enableAnimations !== false;
+
+    // Load floating particles settings
+    if (enableFloatingParticlesCheckbox) {
+      enableFloatingParticlesCheckbox.checked = settings.enableFloatingParticles !== false;
+      if (floatingParticlesOptions) {
+        floatingParticlesOptions.style.display = enableFloatingParticlesCheckbox.checked ? 'block' : 'none';
+      }
+    }
+
+    // Set particle type
+    const particleType = settings.particleType || 'hearts';
+    for (const radio of particleTypeRadios) {
+      if (radio.value === particleType) {
+        radio.checked = true;
+        if (customParticleUpload) {
+          customParticleUpload.style.display = particleType === 'custom' ? 'block' : 'none';
+        }
+        break;
+      }
+    }
+
+    // Load custom particle image if exists
+    if (settings.customParticleImage) {
+      customParticleImageData = settings.customParticleImage;
+      customParticleType = settings.customParticleType || 'png';
+      
+      if (customParticlePreviewImg) {
+        customParticlePreviewImg.src = customParticleImageData;
+      }
+      if (customParticlePreview) {
+        customParticlePreview.style.display = 'block';
+      }
+      if (gifAnimationSettings) {
+        gifAnimationSettings.style.display = customParticleType === 'gif' ? 'block' : 'none';
+      }
+    }
+
+    // Set particle frequency
+    if (particleFrequencyInput) {
+      particleFrequencyInput.value = settings.particleFrequency || 3;
+      if (frequencyValueSpan) {
+        frequencyValueSpan.textContent = particleFrequencyInput.value;
+      }
+    }
+
+    // Set particle speed
+    if (particleSpeedInput) {
+      particleSpeedInput.value = settings.particleSpeed || 3;
+      if (speedValueSpan) {
+        speedValueSpan.textContent = particleSpeedInput.value;
+      }
+    }
+
+    // Set GIF animation delay
+    if (gifAnimationDelay) {
+      gifAnimationDelay.value = settings.gifAnimationDelay || 100;
+      if (gifDelayValue) {
+        gifDelayValue.textContent = gifAnimationDelay.value + 'ms';
+      }
+    }
 
     // Update preview
     updateBadgePreview();

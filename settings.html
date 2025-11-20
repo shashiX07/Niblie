@@ -726,6 +726,96 @@
             </div>
             <p class="hint">Periodically animates the badge to make it more engaging</p>
           </div>
+
+          <div class="option-group">
+            <div class="toggle-wrapper">
+              <label for="enable-floating-particles">
+                <strong>Floating Particles</strong><br>
+                <span class="hint" style="margin: 0;">Cute floating hearts, stars, or sparkles around the badge</span>
+              </label>
+              <label class="switch">
+                <input type="checkbox" id="enable-floating-particles" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div id="floating-particles-options" style="margin-left: 16px; padding-left: 16px; border-left: 3px solid var(--border);">
+            <div class="option-group">
+              <label style="display: block; font-weight: 600; margin-bottom: 12px;">Particle Type</label>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input type="radio" name="particle-type" value="hearts" checked>
+                  <span>💖 Hearts</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="particle-type" value="stars">
+                  <span>⭐ Stars</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="particle-type" value="sparkles">
+                  <span>✨ Sparkles</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="particle-type" value="flowers">
+                  <span>🌸 Flowers</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="particle-type" value="cute">
+                  <span>🦋 Cute Mix</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="particle-type" value="custom">
+                  <span>🖼️ Custom Image</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="option-group" id="custom-particle-upload" style="display: none;">
+              <label style="display: block; font-weight: 600; margin-bottom: 12px;">Custom Particle Image</label>
+              <div style="background: var(--bg-secondary); padding: 20px; border-radius: 8px; border: 2px dashed var(--border);">
+                <p class="hint" style="margin-bottom: 12px;">Upload a transparent PNG or GIF (max 100KB, recommended 32x32px)</p>
+                <input type="file" id="custom-particle-file" accept="image/png,image/gif" style="display: block; margin-bottom: 12px;">
+                <div id="custom-particle-preview" style="display: none; margin-top: 12px; text-align: center;">
+                  <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Preview:</p>
+                  <img id="custom-particle-preview-img" style="max-width: 64px; max-height: 64px; border: 2px solid var(--border); border-radius: 4px; background: repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 10px, #fff 10px, #fff 20px);">
+                  <button id="remove-custom-particle" style="display: block; margin: 12px auto 0; padding: 6px 12px; background: var(--danger); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Remove Image</button>
+                </div>
+                <div id="gif-animation-settings" style="display: none; margin-top: 16px;">
+                  <label for="gif-animation-delay" style="display: block; font-weight: 600; margin-bottom: 8px;">GIF Animation Speed</label>
+                  <input type="range" id="gif-animation-delay" min="50" max="500" value="100" step="10" style="width: 100%;">
+                  <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                    <span>Fast (50ms)</span>
+                    <span id="gif-delay-value">100ms</span>
+                    <span>Slow (500ms)</span>
+                  </div>
+                  <p class="hint" style="margin-top: 8px;">Control how fast the GIF animation plays</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="option-group">
+              <label for="particle-frequency" style="display: block; font-weight: 600; margin-bottom: 8px;">Particle Frequency</label>
+              <input type="range" id="particle-frequency" min="1" max="10" value="3" step="1" style="width: 100%;">
+              <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                <span>Less</span>
+                <span id="frequency-value">3</span>
+                <span>More</span>
+              </div>
+              <p class="hint" style="margin-top: 8px;">How many particles appear around the badge</p>
+            </div>
+
+            <div class="option-group">
+              <label for="particle-speed" style="display: block; font-weight: 600; margin-bottom: 8px;">Animation Speed</label>
+              <input type="range" id="particle-speed" min="1" max="5" value="3" step="1" style="width: 100%;">
+              <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                <span>Slow</span>
+                <span id="speed-value">3</span>
+                <span>Fast</span>
+              </div>
+              <p class="hint" style="margin-top: 8px;">How quickly particles float and disappear</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

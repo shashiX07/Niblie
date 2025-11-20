@@ -4,13 +4,13 @@
 
 ---
 
-## 🆕 Version 0.3.0 Updates
+## 🆕 Version 0.3.0 - Latest Updates
 
-* Enhanced Ad Blocker with smart detection (8 methods)
-* UI-based muting system for Spotify ads
-* Performance monitoring and memory management
-* Settings page renamed to settings.html for clarity
-* Improved module system and bug fixes
+* **🎓 College Automation Framework** - Automated Scipts supports for different organization and institutes automations scripts support. 
+* **✨ Floating Particles** - Customizable cute animations around badge (hearts, stars, sparkles, custom images/GIFs)
+* **🔐 Smart Credential Learning** - Auto-saves login data as you type
+* **🎨 Enhanced Cute Theme** - More animation options and particle controls
+* **📦 Extensible Architecture** - Easy framework for adding more colleges/organizations
 
 ---
 
@@ -45,6 +45,27 @@
 * Automatically removes banner ads from websites
 * Designed to remain undetectable
 * Future support for filter list integrations
+
+### 🎓 College Auto-Login
+
+* Automatically fills login credentials for supported college portals
+* **Currently supports:** IIT Kharagpur ERP
+* **Features:**
+  * Auto-fills User ID and Password
+  * Handles security questions with fuzzy matching
+  * Learns new credentials as you type
+  * Secure browser-based storage
+  * Manual OTP entry for security
+* **Extensible:** Add your college - see [colleges/README.md](colleges/README.md)
+
+### ✨ Floating Particles
+
+* Cute animated particles around the badge
+* **5 built-in types:** Hearts, Stars, Sparkles, Flowers, Cute Mix
+* **Custom images:** Upload your own PNG or GIF (max 100KB)
+* **Adjustable:** Frequency (1-10), Speed (1-5), GIF delay (50-500ms)
+* **Milestone celebrations:** Burst of particles on page milestones
+* Enable/disable in Badge Style settings
 
 ### ✍️ Autofill Engine
 

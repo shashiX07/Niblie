@@ -1,0 +1,20 @@
+{
+  "colleges": [
+    {
+      "code": "iitkgp",
+      "name": "IIT Kharagpur",
+      "urlPatterns": [
+        "erp.iitkgp.ac.in"
+      ],
+      "scripts": [
+        "colleges/iitkgp/login.js"
+      ]
+    }
+  ],
+  "matchRules": {
+    "erp.iitkgp.ac.in": {
+      "college": "iitkgp",
+      "features": ["autoLogin", "autoFillForms"]
+    }
+  }
+}

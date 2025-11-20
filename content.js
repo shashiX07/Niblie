@@ -133,6 +133,13 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         if (newSettings.showWordCount) {
           performWordCount(); // Update badge immediately
         }
+        // Restart floating particles if settings changed
+        if (newSettings.enableFloatingParticles !== oldSettings.enableFloatingParticles ||
+            newSettings.particleType !== oldSettings.particleType ||
+            newSettings.particleFrequency !== oldSettings.particleFrequency ||
+            newSettings.particleSpeed !== oldSettings.particleSpeed) {
+          BadgeUI.restartFloatingParticles();
+        }
       });
     }
   }

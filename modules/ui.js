@@ -17,6 +17,11 @@ const BadgeUI = {
     mouseEnter: null,
     mouseLeave: null
   },
+  // Floating particles system
+  floatingParticles: [],
+  particleInterval: null,
+  customImageData: null,
+  customImageType: null,
   
   /**
    * Initializes badge with settings
@@ -56,7 +61,14 @@ const BadgeUI = {
         opacity: 90,
         useCuteTheme: true, // Enable cute theme by default
         cuteThemeStyle: 'kawaii', // Default cute style
-        enableAnimations: true // Enable animations
+        enableAnimations: true, // Enable animations
+        enableFloatingParticles: true, // Floating particles around badge
+        particleType: 'hearts', // hearts, stars, sparkles, or custom
+        particleFrequency: 3, // Particles per cycle (1-10)
+        particleSpeed: 3, // Animation speed (1-5)
+        customParticleImage: null, // Base64 encoded custom image
+        customParticleType: 'png', // png or gif
+        gifAnimationDelay: 100 // GIF frame delay in ms
       };
       
       const initComplete = (settings) => {
@@ -77,7 +89,10 @@ const BadgeUI = {
           chrome.storage.sync.get('settings', (data) => {
             clearTimeout(storageTimeout);
             const settings = data && data.settings ? data.settings : defaultSettings;
-            console.log('BadgeUI: Settings loaded:', settings);
+            console.log('BadgeUI: Settings loaded:', {
+              ...settings,
+              customParticleImage: settings.customParticleImage ? 'IMAGE_DATA(' + settings.customParticleImage.length + ')' : null
+            });
             initComplete(settings);
           });
         } else if (typeof localStorage !== 'undefined') {
@@ -203,6 +218,11 @@ const BadgeUI = {
       // Start animations if enabled
       if (this.settings?.enableAnimations) {
         this.startPeriodicAnimations();
+      }
+      
+      // Start floating particles if enabled
+      if (this.settings?.enableFloatingParticles) {
+        this.startFloatingParticles();
       }
       
       return badge;
@@ -677,6 +697,9 @@ const BadgeUI = {
       this.animationInterval = null;
     }
     
+    // Stop and clear floating particles
+    this.stopFloatingParticles();
+    
     this.initialized = false;
   },
   
@@ -716,6 +739,45 @@ const BadgeUI = {
         100% { transform: translateY(0); }
       }
       
+      @keyframes floatUp {
+        0% {
+          opacity: 0;
+          transform: translate(var(--start-x), 0) scale(0.5);
+        }
+        10% {
+          opacity: 1;
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translate(var(--end-x), -80px) scale(0.8);
+        }
+      }
+      
+      @keyframes floatSide {
+        0% {
+          opacity: 0;
+          transform: translate(0, var(--start-y)) scale(0.5) rotate(0deg);
+        }
+        10% {
+          opacity: 1;
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translate(60px, var(--end-y)) scale(0.8) rotate(360deg);
+        }
+      }
+      
+      @keyframes twinkle {
+        0%, 100% { opacity: 0.3; transform: scale(0.8); }
+        50% { opacity: 1; transform: scale(1.2); }
+      }
+      
       .badge-animation-pulse {
         animation: badgePulse 1s ease-in-out;
       }
@@ -730,6 +792,18 @@ const BadgeUI = {
       
       .badge-icon.bounce {
         animation: iconBounce 0.5s ease-in-out;
+      }
+      
+      .floating-particle {
+        position: fixed;
+        pointer-events: none;
+        z-index: 2147483646;
+        font-size: 16px;
+        will-change: transform, opacity;
+      }
+      
+      .floating-particle.twinkle {
+        animation: twinkle 2s ease-in-out infinite;
       }
     `;
     
@@ -904,6 +978,11 @@ const BadgeUI = {
       }, 2000);
     }
     
+    // Create celebration burst of particles
+    if (this.settings?.enableFloatingParticles) {
+      this.createParticleBurst(10);
+    }
+    
     // Optionally, show a browser notification
     if (typeof chrome !== 'undefined' && chrome.notifications) {
       chrome.notifications.create({
@@ -913,6 +992,203 @@ const BadgeUI = {
         message: `🎉 Congratulations! You've reached ${milestone} words! 🎉`,
         priority: 2
       });
+    }
+  },
+  
+  /**
+   * Start floating particles around badge
+   */
+  startFloatingParticles: function() {
+    if (!this.badge || !this.settings?.enableFloatingParticles) return;
+    
+    console.log('[BadgeUI] Starting particles:', {
+      type: this.settings.particleType,
+      hasCustomImage: !!this.settings.customParticleImage,
+      customImageSize: this.settings.customParticleImage ? this.settings.customParticleImage.length : 0
+    });
+    
+    // Stop any existing particle generation
+    this.stopFloatingParticles();
+    
+    // Calculate interval based on frequency (higher frequency = shorter interval)
+    const baseInterval = 2000; // 2 seconds
+    const frequency = this.settings.particleFrequency || 3;
+    const interval = Math.max(500, baseInterval / frequency);
+    
+    // Generate particles periodically
+    this.particleInterval = setInterval(() => {
+      if (!this.badge || !document.body.contains(this.badge)) {
+        this.stopFloatingParticles();
+        return;
+      }
+      
+      this.createFloatingParticle();
+    }, interval);
+    
+    // Create initial particles
+    for (let i = 0; i < Math.min(frequency, 3); i++) {
+      setTimeout(() => this.createFloatingParticle(), i * 300);
+    }
+  },
+  
+  /**
+   * Restart floating particles (useful when settings change)
+   */
+  restartFloatingParticles: function() {
+    this.stopFloatingParticles();
+    if (this.settings?.enableFloatingParticles) {
+      setTimeout(() => this.startFloatingParticles(), 100);
+    }
+  },
+  
+  /**
+   * Stop floating particles
+   */
+  stopFloatingParticles: function() {
+    if (this.particleInterval) {
+      clearInterval(this.particleInterval);
+      this.particleInterval = null;
+    }
+    
+    // Remove all existing particles
+    this.floatingParticles.forEach(particle => {
+      if (particle && particle.parentNode) {
+        particle.parentNode.removeChild(particle);
+      }
+    });
+    this.floatingParticles = [];
+  },
+  
+  /**
+   * Create a single floating particle
+   */
+  createFloatingParticle: function() {
+    if (!this.badge) return;
+    
+    const particle = document.createElement('div');
+    particle.className = 'floating-particle';
+    
+    // Get badge position and dimensions
+    const badgeRect = this.badge.getBoundingClientRect();
+    const badgeCenterX = badgeRect.left + badgeRect.width / 2;
+    const badgeCenterY = badgeRect.top + badgeRect.height / 2;
+    
+    // Random starting position around badge (orbit)
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 40 + Math.random() * 20;
+    const startX = badgeCenterX + Math.cos(angle) * distance;
+    const startY = badgeCenterY + Math.sin(angle) * distance;
+    
+    // Set particle content based on type
+    const particleType = this.settings.particleType || 'hearts';
+    
+    if (particleType === 'custom' && this.settings.customParticleImage) {
+      // Use custom image/GIF
+      const img = document.createElement('img');
+      img.src = this.settings.customParticleImage;
+      img.style.cssText = `
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+        display: block;
+        pointer-events: none;
+      `;
+      img.onerror = () => {
+        console.error('[BadgeUI] Custom particle image failed to load');
+      };
+      particle.appendChild(img);
+      console.log('[BadgeUI] Created custom particle with image');
+    } else {
+      // Use emoji particles
+      const particleEmojis = {
+        hearts: ['💖', '💕', '💗', '💓', '💝'],
+        stars: ['⭐', '✨', '🌟', '💫', '⚡'],
+        sparkles: ['✨', '💎', '🔮', '💠', '🌈'],
+        flowers: ['🌸', '🌺', '🌼', '🌻', '🌷'],
+        cute: ['🦋', '🐝', '🍀', '🎀', '🎈']
+      };
+      
+      const emojis = particleEmojis[particleType] || particleEmojis.hearts;
+      particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    }
+    
+    // Position particle
+    this.applyStyle(particle, {
+      left: `${startX}px`,
+      top: `${startY}px`,
+      fontSize: `${12 + Math.random() * 8}px`
+    });
+    
+    // Animation settings
+    const speed = this.settings.particleSpeed || 3;
+    const duration = Math.max(1, 5 - speed * 0.6) + Math.random() * 1; // 1-5 seconds
+    
+    // Random animation pattern
+    const patterns = ['floatUp', 'floatSide'];
+    const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+    
+    // Set CSS variables for animation
+    const endOffset = -30 + Math.random() * 60;
+    particle.style.setProperty('--start-x', '0px');
+    particle.style.setProperty('--start-y', '0px');
+    particle.style.setProperty('--end-x', `${endOffset}px`);
+    particle.style.setProperty('--end-y', `${endOffset}px`);
+    
+    // Apply animation
+    particle.style.animation = `${pattern} ${duration}s ease-out forwards`;
+    
+    // Add some particles with twinkle effect
+    if (Math.random() > 0.7) {
+      setTimeout(() => {
+        if (particle.parentNode) {
+          particle.classList.add('twinkle');
+        }
+      }, 100);
+    }
+    
+    // Add to DOM
+    document.body.appendChild(particle);
+    this.floatingParticles.push(particle);
+    
+    // Remove particle after animation completes
+    setTimeout(() => {
+      if (particle && particle.parentNode) {
+        particle.parentNode.removeChild(particle);
+      }
+      const index = this.floatingParticles.indexOf(particle);
+      if (index > -1) {
+        this.floatingParticles.splice(index, 1);
+      }
+    }, duration * 1000);
+  },
+  
+  /**
+   * Create a burst of particles for celebrations
+   * @param {number} count - Number of particles to create
+   */
+  createParticleBurst: function(count = 10) {
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => this.createFloatingParticle(), i * 100);
+    }
+  },
+  
+  /**
+   * Load custom particle image from base64 or file
+   * @param {string} imageData - Base64 encoded image data
+   * @param {string} imageType - 'png' or 'gif'
+   */
+  loadCustomParticleImage: function(imageData, imageType = 'png') {
+    this.customImageData = imageData;
+    this.customImageType = imageType;
+    
+    if (this.settings) {
+      this.settings.customParticleImage = imageData;
+      this.settings.customParticleType = imageType;
+      
+      // Save to storage
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+        chrome.storage.sync.set({ settings: this.settings });
+      }
     }
   }
 };

@@ -42,6 +42,22 @@
       "matches": ["<all_urls>"],
       "js": ["formAutofiller.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["*://erp.iitkgp.ac.in/*"],
+      "js": ["colleges/loader.js", "colleges/iitkgp/login.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "colleges/iitkgp/config.json",
+        "colleges/iitkgp/login.js",
+        "colleges/registry.json",
+        "colleges/loader.js"
+      ],
+      "matches": ["<all_urls>"]
     }
   ],
   "background": {
