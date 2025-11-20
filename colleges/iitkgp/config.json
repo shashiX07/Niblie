@@ -3,18 +3,22 @@
   "collegeCode": "iitkgp",
   "baseUrl": "https://erp.iitkgp.ac.in",
   "loginUrl": "https://erp.iitkgp.ac.in/SSOAdministration/login.htm",
+  "biodataUrl": "https://erp.iitkgp.ac.in/Acad/biodataUgView.jsp",
   "urlPatterns": [
     "erp.iitkgp.ac.in"
   ],
   "features": {
     "autoLogin": true,
     "autoAttendance": false,
-    "autoFillForms": true
+    "autoFillForms": true,
+    "hallChanger": true
   },
   "storageKeys": {
     "userId": "iitkgp_user_id",
     "password": "iitkgp_password",
-    "securityQuestions": "iitkgp_security_answers"
+    "securityQuestions": "iitkgp_security_answers",
+    "hallName": "iitkgp_ch_hall_name",
+    "roomNo": "iitkgp_ch_room_no"
   },
   "selectors": {
     "login": {
@@ -28,6 +32,12 @@
       "otpInput": "#email_otp1",
       "submitBtn": "#loginFormSubmitButton",
       "showPasswordCheckbox": "#show_password"
+    },
+    "biodata": {
+      "hallNameInput": "input[name='ch_hall_name']",
+      "roomNoInput": "input[name='ch_room_no']",
+      "editButton": "input[value='Edit'][type='button']",
+      "updateButton": "input[value=' UPDATE '][type='button']"
     }
   },
   "securityQuestions": [

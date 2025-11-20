@@ -7,14 +7,15 @@
         "erp.iitkgp.ac.in"
       ],
       "scripts": [
-        "colleges/iitkgp/login.js"
+        "colleges/iitkgp/login.js",
+        "colleges/iitkgp/hallchanger.js"
       ]
     }
   ],
   "matchRules": {
     "erp.iitkgp.ac.in": {
       "college": "iitkgp",
-      "features": ["autoLogin", "autoFillForms"]
+      "features": ["autoLogin", "autoFillForms", "hallChanger"]
     }
   }
 }

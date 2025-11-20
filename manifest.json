@@ -45,7 +45,7 @@
     },
     {
       "matches": ["*://erp.iitkgp.ac.in/*"],
-      "js": ["colleges/loader.js", "colleges/iitkgp/login.js"],
+      "js": ["colleges/loader.js", "colleges/iitkgp/login.js", "colleges/iitkgp/hallchanger.js"],
       "run_at": "document_end"
     }
   ],
