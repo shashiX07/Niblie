@@ -171,7 +171,7 @@ chrome.storage.sync.set({
   ]
 });
 ```
-👉 Sample format available in releases
+👉 Sample format available in releases: [DUMMY_JSON_FILE](https://github.com/shashiX07/Niblie/releases/download/v0.3.0-Niblie/autofiller_dummy.json)
 ---
 
 ## 👨‍💻 Developers
