@@ -6,7 +6,7 @@
 
 (function() {
   'use strict';
-  
+
   // Prevent multiple initializations
   if (window.__IITKGP_LOGIN_INITIALIZED__) {
     console.log('[IITKGP] Already initialized, skipping');
@@ -22,365 +22,246 @@
       answerDiv: '#answer_div',
       question: '#question',
       answer: '#answer',
-      sendOtpBtn: '#getotp',
-      otpInput: '#email_otp1'
+      sendOtpBtn: '#getotp'
     },
     delays: {
-      fill: 500,        // Delay before filling
-      save: 3000,       // Debounce for saving
-      clickOtp: 800     // Delay before clicking Send OTP
+      fillPassword: 500,
+      triggerBlur: 300,
+      waitForQuestion: 1500,
+      fillAnswer: 500
     }
   };
 
   // State flags
-  let hasFilledCredentials = false;
-  let hasHandledSecurityQuestion = false;
-  let securityQuestionObserver = null;
+  let questionHandled = false;
+  let credentialsFilled = false;
 
   /**
-   * Fuzzy match two strings
+   * Get stored data for this site
    */
-  function fuzzyMatch(a, b) {
-    if (!a || !b) return false;
-    const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const normA = normalize(a);
-    const normB = normalize(b);
-    return normA.includes(normB) || normB.includes(normA);
-  }
-
-  // Password encryption/decryption removed - store plain text
-
-  /**
-   * Load credentials from formAutofiller storage (key/value structure)
-   */
-  function loadCredentials() {
+  function getStoredData() {
     return new Promise((resolve) => {
-      chrome.storage.sync.get('autofillFields', (data) => {
-        const fields = data.autofillFields || [];
-        const credentials = {
-          userId: '',
-          password: '',
-          securityAnswers: {}
-        };
-        
-        // Parse autofillFields array (using key/value structure like formautofiller.js)
-        fields.forEach(field => {
-          if (!field.key || !field.value) return;
-          
-          // Match user ID
-          if (fuzzyMatch(field.key, 'iitkgp_user_id') || 
-              fuzzyMatch(field.key, 'stakeholder code') ||
-              fuzzyMatch(field.key, 'roll number') ||
-              fuzzyMatch(field.key, 'user id')) {
-            credentials.userId = field.value;
-          }
-          // Match password
-          else if (fuzzyMatch(field.key, 'iitkgp_password') || 
-                   fuzzyMatch(field.key, 'iitkgp pass')) {
-            credentials.password = field.value;
-          }
-          // Match security questions
-          else if (field.key.toLowerCase().includes('youtuber') || 
-                   field.key.toLowerCase().includes('movie') || 
-                   field.key.toLowerCase().includes('pet')) {
-            credentials.securityAnswers[field.key] = field.value;
-          }
-        });
-        
-        console.log('[IITKGP] Loaded credentials:', {
-          hasUserId: !!credentials.userId,
-          hasPassword: !!credentials.password,
-          securityAnswersCount: Object.keys(credentials.securityAnswers).length
-        });
-        
-        resolve(credentials);
+      chrome.storage.local.get(['formData'], (result) => {
+        const data = result.formData || {};
+        const siteData = data[window.location.hostname] || {};
+        resolve(siteData);
       });
     });
   }
 
   /**
-   * Save credentials to formAutofiller storage (key/value structure)
+   * Save data for this site
    */
-  function saveCredentials(userId, password, securityQuestion, securityAnswer) {
-    chrome.storage.sync.get('autofillFields', (data) => {
-      let fields = data.autofillFields || [];
-      
-      // Update or add user ID
-      if (userId) {
-        const userIdIndex = fields.findIndex(f => f.key === 'iitkgp_user_id');
-        if (userIdIndex >= 0) {
-          fields[userIdIndex].value = userId;
-        } else {
-          fields.push({ key: 'iitkgp_user_id', value: userId });
-        }
+  function saveData(key, value) {
+    chrome.storage.local.get(['formData'], (result) => {
+      const data = result.formData || {};
+      if (!data[window.location.hostname]) {
+        data[window.location.hostname] = {};
       }
-      
-      // Update or add password
-      if (password) {
-        const passwordIndex = fields.findIndex(f => f.key === 'iitkgp_password');
-        if (passwordIndex >= 0) {
-          fields[passwordIndex].value = password;
-        } else {
-          fields.push({ key: 'iitkgp_password', value: password });
-        }
-      }
-      
-      // Update or add security answer (use actual question text as key)
-      if (securityQuestion && securityAnswer) {
-        const answerIndex = fields.findIndex(f => f.key === securityQuestion);
-        if (answerIndex >= 0) {
-          fields[answerIndex].value = securityAnswer;
-        } else {
-          fields.push({ key: securityQuestion, value: securityAnswer });
-        }
-      }
-      
-      chrome.storage.sync.set({ autofillFields: fields }, () => {
-        console.log('[IITKGP] Saved to autofillFields');
+      data[window.location.hostname][key] = value;
+      chrome.storage.local.set({ formData: data }, () => {
+        console.log(`[IITKGP] Saved ${key}`);
       });
     });
   }
 
   /**
-   * Fill input field with proper event triggering
+   * Fill input field
    */
-  function fillInput(input, value) {
-    if (!input) return;
-    
-    // For password type inputs, temporarily change to text to fill properly
-    const originalType = input.type;
-    if (originalType === 'password') {
-      input.type = 'text';
+  function fillField(selector, value) {
+    const field = document.querySelector(selector);
+    if (field && value) {
+      field.value = value;
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      field.dispatchEvent(new Event('change', { bubbles: true }));
+      console.log(`[IITKGP] Filled ${selector}`);
+      return true;
     }
-    
-    // Set value
-    input.value = value;
-    
-    // Trigger all necessary events
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    input.dispatchEvent(new Event('change', { bubbles: true }));
-    input.dispatchEvent(new Event('blur', { bubbles: true }));
-    
-    // Restore password type after a short delay
-    if (originalType === 'password') {
-      setTimeout(() => {
-        input.type = originalType;
-      }, 100);
-    }
+    return false;
   }
 
   /**
-   * Fill login form with saved credentials
+   * Step 1: Fill Roll No and unfocus it by clicking elsewhere
    */
-  async function fillLoginForm() {
-    if (hasFilledCredentials) {
-      console.log('[IITKGP] Already filled, skipping');
-      return;
-    }
-    
-    const credentials = await loadCredentials();
-    
-    // Fill user ID (note: this is type="password" in the DOM!)
-    const userIdInput = document.querySelector(CONFIG.selectors.userId);
-    if (userIdInput && credentials.userId) {
-      fillInput(userIdInput, credentials.userId);
+  async function fillCredentials() {
+    if (credentialsFilled) return;
+
+    const data = await getStoredData();
+    const userIdField = document.querySelector(CONFIG.selectors.userId);
+    const passwordField = document.querySelector(CONFIG.selectors.password);
+
+    if (!userIdField || !passwordField) return;
+
+    // Fill Roll No
+    if (data.user_id) {
+      fillField(CONFIG.selectors.userId, data.user_id);
       console.log('[IITKGP] Filled user ID');
-      hasFilledCredentials = true;
-    }
-    
-    // Fill password
-    const passwordInput = document.querySelector(CONFIG.selectors.password);
-    if (passwordInput && credentials.password) {
-      fillInput(passwordInput, credentials.password);
-      console.log('[IITKGP] Filled password');
+
+      // Click on password field to unfocus roll no (this triggers security question)
+      setTimeout(() => {
+        passwordField.focus();
+        passwordField.click();
+        console.log('[IITKGP] Clicked password field to unfocus roll no');
+
+        // Wait 2 seconds, then fill password
+        setTimeout(() => {
+          if (data.password) {
+            fillField(CONFIG.selectors.password, data.password);
+            credentialsFilled = true;
+            console.log('[IITKGP] Filled password, watching for security question...');
+
+            // Start watching for security question
+            watchForSecurityQuestion();
+          }
+        }, 2000); // Wait 2 seconds before filling password
+      }, 300); // Small delay before clicking password field
     }
   }
 
   /**
-   * Monitor user input and save credentials
+   * Step 2: Watch for security question to appear
    */
-  function monitorUserInput() {
-    let saveTimeout;
-    
-    const userIdInput = document.querySelector(CONFIG.selectors.userId);
-    const passwordInput = document.querySelector(CONFIG.selectors.password);
-    
-    if (!userIdInput || !passwordInput) return;
-    
-    const saveData = () => {
-      const userId = userIdInput.value.trim();
-      const password = passwordInput.value.trim();
-      
-      if (userId && password) {
-        saveCredentials(userId, password, null, null);
-        console.log('[IITKGP] Saved user credentials');
+  function watchForSecurityQuestion() {
+    let lastQuestion = '';
+    let questionStableTimeout = null;
+
+    const observer = new MutationObserver(() => {
+      const answerDiv = document.querySelector(CONFIG.selectors.answerDiv);
+
+      if (answerDiv && answerDiv.style.display !== 'none' && !questionHandled) {
+        const questionField = document.querySelector(CONFIG.selectors.question);
+        const currentQuestion = questionField ? questionField.value.trim() : '';
+
+        // Check if question has changed
+        if (currentQuestion && currentQuestion !== lastQuestion) {
+          lastQuestion = currentQuestion;
+          console.log('[IITKGP] Question detected:', currentQuestion);
+
+          // Clear previous timeout
+          if (questionStableTimeout) {
+            clearTimeout(questionStableTimeout);
+          }
+
+          // Wait for question to stabilize (no more changes for 2 seconds)
+          questionStableTimeout = setTimeout(() => {
+            const finalQuestion = document.querySelector(CONFIG.selectors.question);
+            if (finalQuestion && finalQuestion.value.trim() === lastQuestion) {
+              console.log('[IITKGP] Question stabilized:', lastQuestion);
+              observer.disconnect();
+              handleSecurityQuestion();
+            }
+          }, 2000); // Wait 2 seconds for question to stabilize
+        }
       }
-    };
-    
-    // Monitor both fields
-    [userIdInput, passwordInput].forEach(input => {
-      input.addEventListener('input', () => {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(saveData, CONFIG.delays.save);
-      }, { passive: true });
-      
-      input.addEventListener('blur', () => {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(saveData, 1000);
-      }, { passive: true });
     });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style', 'value']
+    });
+
+    // Also check immediately in case it's already visible
+    setTimeout(() => {
+      const answerDiv = document.querySelector(CONFIG.selectors.answerDiv);
+      const questionField = document.querySelector(CONFIG.selectors.question);
+
+      if (answerDiv && answerDiv.style.display !== 'none' && questionField && !questionHandled) {
+        const currentQuestion = questionField.value.trim();
+        if (currentQuestion) {
+          lastQuestion = currentQuestion;
+          console.log('[IITKGP] Initial question check:', currentQuestion);
+
+          questionStableTimeout = setTimeout(() => {
+            const finalQuestion = document.querySelector(CONFIG.selectors.question);
+            if (finalQuestion && finalQuestion.value.trim() === lastQuestion) {
+              console.log('[IITKGP] Question stabilized:', lastQuestion);
+              observer.disconnect();
+              handleSecurityQuestion();
+            }
+          }, 2000); // Wait 2 seconds
+        }
+      }
+    }, 2000); // Wait 2 seconds before initial check
   }
 
   /**
-   * Handle security question
+   * Step 3: Handle security question
    */
   async function handleSecurityQuestion() {
-    if (hasHandledSecurityQuestion) {
-      console.log('[IITKGP] Already handled security question');
+    if (questionHandled) {
+      console.log('[IITKGP] Question already handled, skipping');
       return;
     }
-    
-    const answerDiv = document.querySelector(CONFIG.selectors.answerDiv);
-    const questionLabel = document.querySelector(CONFIG.selectors.question);
-    const answerInput = document.querySelector(CONFIG.selectors.answer);
-    
-    // Check if security question is visible
-    if (!answerDiv || answerDiv.classList.contains('hidden')) {
+    questionHandled = true;
+
+    const questionField = document.querySelector(CONFIG.selectors.question);
+    const answerField = document.querySelector(CONFIG.selectors.answer);
+    const sendOtpBtn = document.querySelector(CONFIG.selectors.sendOtpBtn);
+
+    if (!questionField || !answerField) {
+      console.log('[IITKGP] Question or answer field not found');
+      questionHandled = false;
       return;
     }
-    
-    if (!questionLabel || !answerInput) {
+
+    const question = questionField.value.trim();
+    console.log('[IITKGP] Final security question:', question);
+
+    if (!question) {
+      console.log('[IITKGP] Empty question');
+      questionHandled = false;
       return;
     }
-    
-    const questionText = questionLabel.textContent.trim();
-    if (!questionText) return;
-    
-    console.log('[IITKGP] Security question detected:', questionText);
-    
-    const credentials = await loadCredentials();
-    let foundAnswer = null;
-    
-    // Try to find matching answer using fuzzy match
-    for (const [savedQuestion, answer] of Object.entries(credentials.securityAnswers)) {
-      if (fuzzyMatch(questionText, savedQuestion)) {
-        foundAnswer = answer;
-        console.log('[IITKGP] Found matching answer');
-        break;
-      }
-    }
-    
-    if (foundAnswer) {
-      // Fill the answer
-      fillInput(answerInput, foundAnswer);
-      console.log('[IITKGP] Filled security answer');
-      
-      // Click Send OTP button
+
+    // Get stored data
+    const data = await getStoredData();
+    const storedAnswer = data[question];
+
+    if (storedAnswer) {
+      // Answer exists in storage, fill it
+      console.log('[IITKGP] Found stored answer');
       setTimeout(() => {
-        const otpButton = document.querySelector(CONFIG.selectors.sendOtpBtn);
-        if (otpButton && !otpButton.disabled) {
-          otpButton.click();
-          console.log('[IITKGP] Clicked Send OTP');
-        }
-      }, CONFIG.delays.clickOtp);
-      
-      hasHandledSecurityQuestion = true;
+        fillField(CONFIG.selectors.answer, storedAnswer);
+        console.log('[IITKGP] Filled answer');
+
+        // Click Send OTP button
+        setTimeout(() => {
+          if (sendOtpBtn) {
+            sendOtpBtn.click();
+            console.log('[IITKGP] Clicked Send OTP button');
+          }
+        }, 500); // Wait 500ms before clicking button
+      }, 500); // Wait 500ms before filling answer
     } else {
-      // Answer not found - monitor for user input
-      console.log('[IITKGP] No answer found, will learn when user enters');
-      monitorSecurityAnswer(questionText, answerInput);
-    }
-  }
+      // Answer not in storage, save it when user fills
+      console.log('[IITKGP] Answer not found in storage, will save when user fills it');
 
-  /**
-   * Monitor security answer input for new questions
-   */
-  function monitorSecurityAnswer(questionText, answerInput) {
-    let saveTimeout;
-    
-    const saveAnswer = () => {
-      const answer = answerInput.value.trim();
-      if (answer) {
-        saveCredentials(null, null, questionText, answer);
-        console.log('[IITKGP] Learned new security answer for:', questionText);
-      }
-    };
-    
-    // Save when user types
-    answerInput.addEventListener('input', () => {
-      clearTimeout(saveTimeout);
-      saveTimeout = setTimeout(saveAnswer, CONFIG.delays.save);
-    }, { once: false, passive: true });
-    
-    // Save when user clicks Send OTP
-    const otpButton = document.querySelector(CONFIG.selectors.sendOtpBtn);
-    if (otpButton) {
-      otpButton.addEventListener('click', () => {
-        clearTimeout(saveTimeout);
-        saveAnswer();
-      }, { once: true, passive: true });
-    }
-  }
-
-  /**
-   * Setup security question observer
-   */
-  function setupSecurityQuestionObserver() {
-    const answerDiv = document.querySelector(CONFIG.selectors.answerDiv);
-    if (!answerDiv) return;
-    
-    // Create observer to watch for class changes
-    securityQuestionObserver = new MutationObserver(() => {
-      handleSecurityQuestion();
-    });
-    
-    securityQuestionObserver.observe(answerDiv, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-    
-    // Also check immediately
-    handleSecurityQuestion();
-  }
-
-  /**
-   * Initialize auto-login
-   */
-  async function init() {
-    try {
-      console.log('[IITKGP] Initializing auto-login...');
-      
-      // Wait a bit for DOM to be ready
-      setTimeout(async () => {
-        // Fill login form
-        await fillLoginForm();
-        
-        // Monitor user input
-        monitorUserInput();
-        
-        // Setup security question observer
-        setupSecurityQuestionObserver();
-        
-        console.log('[IITKGP] Auto-login initialized');
-      }, CONFIG.delays.fill);
-      
-      // Cleanup on page unload
-      window.addEventListener('beforeunload', () => {
-        if (securityQuestionObserver) {
-          securityQuestionObserver.disconnect();
+      answerField.addEventListener('input', () => {
+        const userAnswer = answerField.value.trim();
+        if (userAnswer) {
+          saveData(question, userAnswer);
+          console.log('[IITKGP] Saved answer for future use');
         }
       });
-      
-    } catch (error) {
-      console.error('[IITKGP] Initialization error:', error);
     }
   }
 
-  // Start initialization
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
+  /**
+   * Initialize on page load
+   */
+  function init() {
+    console.log('[IITKGP] Login script initialized');
+
+    // Wait for page to be ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fillCredentials);
+    } else {
+      setTimeout(fillCredentials, 500);
+    }
   }
 
+  // Start
+  init();
 })();
