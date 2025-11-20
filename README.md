@@ -213,7 +213,7 @@ Found a bug or issue? Please report it using this Google Form:
 
 ## 📎 Links
 
-* [Download v0.3.0 Release](https://github.com/shashiX07/Niblie/archive/refs/tags/v0.3.0-Niblie.zip)
+* [Download v0.3.0 Release](https://github.com/shashiX07/Niblie/releases/download/v0.3.0-Niblie/Nibliev0.3.0.zip)
 * [GitHub Repository](https://github.com/shashix07/Niblie)
 * [Landing Page](https://shashix07.github.io/Niblie/)
 
