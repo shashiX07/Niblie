@@ -1,5 +1,4 @@
 *.zip
-google*.html
 *.crx
 .DS_Store
 node_modules/
